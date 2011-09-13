@@ -1,0 +1,120 @@
+2011-05-03  jeff
+
+	* ext_icon.gif: Updated extension icon.
+	* ext_emconf.php: Raised state to beta.
+	* ChangeLog, LICENSE, lib/ChangeLog, lib/LICENSE: Moved external
+	  license and changelog files into lib directory.
+
+2011-02-10  mario
+
+	* doc/manual.sxw, ext_conf_template.txt: updated pid configuration
+
+2010-11-16  mario
+
+	* doc/manual.sxw: updated manual
+
+2010-11-13  mario
+
+	* ext_emconf.php: added dependency version for cal
+	* ext_emconf.php: updated version and md5 values
+	* ext_tables.sql: fixed sql
+	* doc, doc/manual.sxw: added docu
+
+2010-11-10  mario
+
+	* ext_conf_template.txt, lib/Sabre/DAV/Auth/Backend/TYPO3.php:
+	  switched from digest to basic auth -> using TYPO3 auth
+
+2010-11-01  mario
+
+	* .buildpath, .project, ChangeLog, LICENSE, _htaccess, caldav.php,
+	  ext_autoload.php, ext_emconf.php, ext_icon.gif,
+	  ext_localconf.php, ext_tables.php, ext_tables.sql, hooks,
+	  hooks/class.tx_caldav_tcemain_processdatamap.php, lib, lib/Sabre,
+	  lib/Sabre.autoload.php, lib/Sabre.includes.php, lib/Sabre/CalDAV,
+	  lib/Sabre/CalDAV/Backend, lib/Sabre/CalDAV/Backend/Abstract.php,
+	  lib/Sabre/CalDAV/Backend/PDO.php,
+	  lib/Sabre/CalDAV/Backend/TYPO3.php,
+	  lib/Sabre/CalDAV/Calendar.php,
+	  lib/Sabre/CalDAV/CalendarObject.php,
+	  lib/Sabre/CalDAV/CalendarRootNode.php,
+	  lib/Sabre/CalDAV/Exception,
+	  lib/Sabre/CalDAV/Exception/InvalidICalendarObject.php,
+	  lib/Sabre/CalDAV/ICalendarUtil.php, lib/Sabre/CalDAV/Plugin.php,
+	  lib/Sabre/CalDAV/Property,
+	  lib/Sabre/CalDAV/Property/SupportedCalendarComponentSet.php,
+	  lib/Sabre/CalDAV/Property/SupportedCalendarData.php,
+	  lib/Sabre/CalDAV/Property/SupportedCollationSet.php,
+	  lib/Sabre/CalDAV/Server.php, lib/Sabre/CalDAV/TYPO3Server.php,
+	  lib/Sabre/CalDAV/UserCalendars.php, lib/Sabre/CalDAV/Version.php,
+	  lib/Sabre/CalDAV/XMLUtil.php, lib/Sabre/DAV, lib/Sabre/DAV/Auth,
+	  lib/Sabre/DAV/Auth/Backend,
+	  lib/Sabre/DAV/Auth/Backend/Abstract.php,
+	  lib/Sabre/DAV/Auth/Backend/AbstractBasic.php,
+	  lib/Sabre/DAV/Auth/Backend/AbstractDigest.php,
+	  lib/Sabre/DAV/Auth/Backend/Apache.php,
+	  lib/Sabre/DAV/Auth/Backend/File.php,
+	  lib/Sabre/DAV/Auth/Backend/PDO.php,
+	  lib/Sabre/DAV/Auth/Backend/TYPO3.php,
+	  lib/Sabre/DAV/Auth/Plugin.php, lib/Sabre/DAV/Auth/Principal.php,
+	  lib/Sabre/DAV/Auth/PrincipalCollection.php,
+	  lib/Sabre/DAV/Browser,
+	  lib/Sabre/DAV/Browser/GuessContentType.php,
+	  lib/Sabre/DAV/Browser/MapGetToPropFind.php,
+	  lib/Sabre/DAV/Browser/Plugin.php, lib/Sabre/DAV/Directory.php,
+	  lib/Sabre/DAV/Exception, lib/Sabre/DAV/Exception.php,
+	  lib/Sabre/DAV/Exception/BadRequest.php,
+	  lib/Sabre/DAV/Exception/Conflict.php,
+	  lib/Sabre/DAV/Exception/ConflictingLock.php,
+	  lib/Sabre/DAV/Exception/FileNotFound.php,
+	  lib/Sabre/DAV/Exception/Forbidden.php,
+	  lib/Sabre/DAV/Exception/InsufficientStorage.php,
+	  lib/Sabre/DAV/Exception/InvalidResourceType.php,
+	  lib/Sabre/DAV/Exception/LockTokenMatchesRequestUri.php,
+	  lib/Sabre/DAV/Exception/Locked.php,
+	  lib/Sabre/DAV/Exception/MethodNotAllowed.php,
+	  lib/Sabre/DAV/Exception/NotAuthenticated.php,
+	  lib/Sabre/DAV/Exception/NotImplemented.php,
+	  lib/Sabre/DAV/Exception/PreconditionFailed.php,
+	  lib/Sabre/DAV/Exception/ReportNotImplemented.php,
+	  lib/Sabre/DAV/Exception/RequestedRangeNotSatisfiable.php,
+	  lib/Sabre/DAV/Exception/UnsupportedMediaType.php,
+	  lib/Sabre/DAV/FS, lib/Sabre/DAV/FS/Directory.php,
+	  lib/Sabre/DAV/FS/File.php, lib/Sabre/DAV/FS/Node.php,
+	  lib/Sabre/DAV/FSExt, lib/Sabre/DAV/FSExt/Directory.php,
+	  lib/Sabre/DAV/FSExt/File.php, lib/Sabre/DAV/FSExt/Node.php,
+	  lib/Sabre/DAV/File.php, lib/Sabre/DAV/ICollection.php,
+	  lib/Sabre/DAV/IExtendedCollection.php, lib/Sabre/DAV/IFile.php,
+	  lib/Sabre/DAV/ILockable.php, lib/Sabre/DAV/INode.php,
+	  lib/Sabre/DAV/IProperties.php, lib/Sabre/DAV/IQuota.php,
+	  lib/Sabre/DAV/Locks, lib/Sabre/DAV/Locks/Backend,
+	  lib/Sabre/DAV/Locks/Backend/Abstract.php,
+	  lib/Sabre/DAV/Locks/Backend/FS.php,
+	  lib/Sabre/DAV/Locks/Backend/PDO.php,
+	  lib/Sabre/DAV/Locks/LockInfo.php, lib/Sabre/DAV/Locks/Plugin.php,
+	  lib/Sabre/DAV/Mount, lib/Sabre/DAV/Mount/Plugin.php,
+	  lib/Sabre/DAV/Node.php, lib/Sabre/DAV/ObjectTree.php,
+	  lib/Sabre/DAV/Property, lib/Sabre/DAV/Property.php,
+	  lib/Sabre/DAV/Property/GetLastModified.php,
+	  lib/Sabre/DAV/Property/Href.php,
+	  lib/Sabre/DAV/Property/IHref.php,
+	  lib/Sabre/DAV/Property/LockDiscovery.php,
+	  lib/Sabre/DAV/Property/Principal.php,
+	  lib/Sabre/DAV/Property/ResourceType.php,
+	  lib/Sabre/DAV/Property/Response.php,
+	  lib/Sabre/DAV/Property/SupportedLock.php,
+	  lib/Sabre/DAV/Property/SupportedReportSet.php,
+	  lib/Sabre/DAV/Server.php, lib/Sabre/DAV/ServerPlugin.php,
+	  lib/Sabre/DAV/SimpleDirectory.php,
+	  lib/Sabre/DAV/TemporaryFileFilterPlugin.php, lib/Sabre/DAV/Tree,
+	  lib/Sabre/DAV/Tree.php, lib/Sabre/DAV/Tree/Filesystem.php,
+	  lib/Sabre/DAV/URLUtil.php, lib/Sabre/DAV/Version.php,
+	  lib/Sabre/DAV/XMLUtil.php, lib/Sabre/HTTP,
+	  lib/Sabre/HTTP/AWSAuth.php, lib/Sabre/HTTP/AbstractAuth.php,
+	  lib/Sabre/HTTP/BasicAuth.php, lib/Sabre/HTTP/DigestAuth.php,
+	  lib/Sabre/HTTP/Request.php, lib/Sabre/HTTP/Response.php,
+	  lib/Sabre/HTTP/Util.php, lib/Sabre/HTTP/Version.php,
+	  lib/Sabre/autoload.php, locallang_db.xml: initial upload
+	* .: Share project "caldav" into
+	  "http://svn.webempoweredchurch.org/repos/calendar"
+
