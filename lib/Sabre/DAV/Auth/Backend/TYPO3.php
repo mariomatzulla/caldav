@@ -7,8 +7,8 @@
  * 
  * @package Sabre
  * @subpackage DAV
- * @copyright Copyright (C) 2007-2010 Rooftop Solutions. All rights reserved.
- * @author Evert Pot (http://www.rooftopsolutions.nl/) 
+ * @copyright Copyright (C) 2012 Mario Matzulla. All rights reserved.
+ * @author Mario Matzulla (http://www.matzullas.de)
  * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
  */
 class Sabre_DAV_Auth_Backend_TYPO3 extends Sabre_DAV_Auth_Backend_AbstractBasic {
@@ -18,16 +18,26 @@ class Sabre_DAV_Auth_Backend_TYPO3 extends Sabre_DAV_Auth_Backend_AbstractBasic 
     private $username;
 
 	/**
+     * PDO table name we'll be using  
+     * 
+     * @var string
+     */
+    protected $tableName;
+
+
+    /**
      * Creates the backend object. 
      *
      * If the filename argument is passed in, it will parse out the specified file fist.
      * 
-     * @param string $filename 
+     * @param string $filename
+     * @param string $tableName The PDO table name to use 
      * @return void
      */
-    public function __construct(PDO $pdo) {
+    public function __construct(PDO $pdo, $tableName = 'users') {
 
         $this->pdo = $pdo;
+        $this->tableName = $tableName;
 
     }
     
@@ -148,7 +158,7 @@ class Sabre_DAV_Auth_Backend_TYPO3 extends Sabre_DAV_Auth_Backend_AbstractBasic 
             $auth->requireLogin();
             throw new Sabre_DAV_Exception_NotAuthenticated('No basic authentication headers were found');
         }
-
+        
         // Authenticates the user
         if (!($userData = $this->validateUserPass($userpass[0],$userpass[1]))) {
             $auth->requireLogin();
@@ -157,7 +167,7 @@ class Sabre_DAV_Auth_Backend_TYPO3 extends Sabre_DAV_Auth_Backend_AbstractBasic 
         if (!isset($userData['uri'])) {
             throw new Sabre_DAV_Exception('The returned array from validateUserPass must contain at a uri element');
         }
-        $this->currentUser = $userData;
+        $this->currentUser = $userpass[0];
         return true;
     }
 

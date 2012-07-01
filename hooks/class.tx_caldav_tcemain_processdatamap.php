@@ -65,7 +65,8 @@ class tx_caldav_tcemain_processdatamap {
 					$tx_cal_api = &$tx_cal_api->tx_cal_api_without($pageIDForPlugin);
 
 					if($table == 'tx_cal_event'){
-						$eventObject = $tx_cal_api->findEvent($event['uid'], 'tx_cal_phpicalendar', '');
+						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', '', false, false, false, true, true);
+
 						if ($eventObject->conf['view.']['event.']['phpicalendarEventTemplate']) {
 							$oldPath = &$eventObject->conf['view.']['event.']['phpicalendarEventTemplate'];
 						} else {

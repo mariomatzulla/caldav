@@ -8,7 +8,7 @@
  *
  * @package Sabre
  * @subpackage DAV
- * @copyright Copyright (C) 2007-2010 Rooftop Solutions. All rights reserved.
+ * @copyright Copyright (C) 2007-2012 Rooftop Solutions. All rights reserved.
  * @author Evert Pot (http://www.rooftopsolutions.nl/) 
  * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
  */
@@ -54,9 +54,10 @@ include 'Sabre/DAV/Property/SupportedLock.php';
 include 'Sabre/DAV/Property/LockDiscovery.php';
 include 'Sabre/DAV/Property/IHref.php';
 include 'Sabre/DAV/Property/Href.php';
+include 'Sabre/DAV/Property/HrefList.php';
 include 'Sabre/DAV/Property/SupportedReportSet.php';
 include 'Sabre/DAV/Property/Response.php';
-include 'Sabre/DAV/Property/Principal.php';
+include 'Sabre/DAV/Property/ResponseList.php';
 
 /* Node interfaces */
 include 'Sabre/DAV/INode.php';
@@ -70,9 +71,11 @@ include 'Sabre/DAV/IExtendedCollection.php';
 /* Node abstract implementations */
 include 'Sabre/DAV/Node.php';
 include 'Sabre/DAV/File.php';
+include 'Sabre/DAV/Collection.php';
 include 'Sabre/DAV/Directory.php';
 
 /* Utilities */
+include 'Sabre/DAV/SimpleCollection.php';
 include 'Sabre/DAV/SimpleDirectory.php';
 include 'Sabre/DAV/XMLUtil.php';
 include 'Sabre/DAV/URLUtil.php';
@@ -113,15 +116,12 @@ include 'Sabre/DAV/TemporaryFileFilterPlugin.php';
 
 /* Authentication plugin */
 include 'Sabre/DAV/Auth/Plugin.php';
-include 'Sabre/DAV/Auth/Backend/Abstract.php';
+include 'Sabre/DAV/Auth/IBackend.php';
 include 'Sabre/DAV/Auth/Backend/AbstractDigest.php';
+include 'Sabre/DAV/Auth/Backend/AbstractBasic.php';
 include 'Sabre/DAV/Auth/Backend/File.php';
 include 'Sabre/DAV/Auth/Backend/PDO.php';
 
-include 'Sabre/DAV/Auth/Principal.php';
-include 'Sabre/DAV/Auth/PrincipalCollection.php';
-
 /* DavMount plugin */
 include 'Sabre/DAV/Mount/Plugin.php';
-
 
