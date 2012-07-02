@@ -451,7 +451,7 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 				$stmt->execute(array($component->getAttribute('UID'),$objectUri));
 			}
 		}
-		$service->insertCalEventsIntoDB($components->_components, $calendarId, $calendarRow['pid'], 0, 0);
+		$service->insertCalEventsIntoDB($components->_components, $calendarId, $calendarRow['pid'], 0, 0, false);
 		$this->clearCache($calendarRow['pid']);
 	}
 
