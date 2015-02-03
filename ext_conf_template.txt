@@ -1,2 +1,0 @@
-# cat=basic/enable/10; type=text; label= Configure the PIDs containing the fe_users and the calendars.
-pids = 3,198
