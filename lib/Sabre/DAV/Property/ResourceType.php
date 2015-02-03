@@ -15,7 +15,7 @@
 class Sabre_DAV_Property_ResourceType extends Sabre_DAV_Property {
 
     /**
-     * resourceType 
+     * resourceType a
      * 
      * @var array
      */

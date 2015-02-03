@@ -127,7 +127,7 @@ class Sabre_DAV_Server {
      *
      * @var bool 
      */
-    public $debugExceptions = false;
+    public $debugExceptions = true;
 
     /**
      * This property allows you to automatically add the 'resourcetype' value 
@@ -1278,7 +1278,6 @@ class Sabre_DAV_Server {
         if ($depth!=0) $depth = 1;
 
         $returnPropertyList = array();
-        
         $parentNode = $this->tree->getNodeForPath($path);
         $nodes = array(
             $path => $parentNode

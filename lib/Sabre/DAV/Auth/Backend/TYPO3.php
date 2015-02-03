@@ -57,16 +57,16 @@ class Sabre_DAV_Auth_Backend_TYPO3 extends Sabre_DAV_Auth_Backend_AbstractBasic 
 		$formfield_uident = 'pass'; 			// formfield with password
 		$formfield_chalvalue = 'challenge';		// formfield with a unique value which is used to encrypt the password and username
 		$formfield_status = 'logintype';
-    	$_POST['logintype'] = 'login';
-		$_POST['user'] = $username;
-		$_POST['pass'] = $password;
-		$_POST['challenge'] = '';
+    	$_GET['logintype'] = 'login';
+		$_GET['user'] = $username;
+		$_GET['pass'] = $password;
+		$_GET['challenge'] = '';
 		$confArr = unserialize($TYPO3_CONF_VARS['EXT']['extConf']['caldav']);
-		$_POST['pid'] = $confArr['pids'];
+		$_GET['pid'] = $confArr['pids'];
 		$TYPO3_CONF_VARS['FE']['loginSecurityLevel']='normal';		
-		require_once (PATH_tslib.'/class.tslib_eidtools.php');
+		//require_once (PATH_tslib.'/class.tslib_eidtools.php');
 
-		$feUserObj = tslib_eidtools::initFeUser();
+		$feUserObj = \TYPO3\CMS\Frontend\Utility\EidUtility::initFeUser();
 
     	if (is_array($feUserObj->user) && $feUserObj->user['uid'] && $feUserObj->user['is_online']){
     		$this->username = $username;

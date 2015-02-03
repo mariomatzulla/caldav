@@ -1,58 +1,61 @@
 <?php
 
 /**
- * Users collection 
+ * AddressBook rootnode 
  *
- * This object is responsible for generating a collection of users.
+ * This object lists a collection of users, which can contain addressbooks.
  *
  * @package Sabre
- * @subpackage CalDAV
+ * @subpackage CardDAV
  * @copyright Copyright (C) 2007-2012 Rooftop Solutions. All rights reserved.
  * @author Evert Pot (http://www.rooftopsolutions.nl/) 
  * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
  */
-class Sabre_CalDAV_CalendarRootNode extends Sabre_DAVACL_AbstractPrincipalCollection {
+class Sabre_CardDAV_AddressBookRoot extends Sabre_DAVACL_AbstractPrincipalCollection {
 
     /**
-     * CalDAV backend 
+     * Principal Backend 
      * 
-     * @var Sabre_CalDAV_Backend_Abstract 
+     * @var Sabre_DAVACL_IPrincipalBackend
      */
-    protected $caldavBackend;
+    protected $principalBackend;
+
+    /**
+     * CardDAV backend 
+     * 
+     * @var Sabre_CardDAV_Backend_Abstract 
+     */
+    protected $carddavBackend;
 
     /**
      * Constructor 
      *
-     * This constructor needs both an authentication and a caldav backend.
+     * This constructor needs both a principal and a carddav backend.
      *
-     * By default this class will show a list of calendar collections for 
+     * By default this class will show a list of addressbook collections for 
      * principals in the 'principals' collection. If your main principals are 
      * actually located in a different path, use the $principalPrefix argument 
      * to override this.
      *
-     *
      * @param Sabre_DAVACL_IPrincipalBackend $principalBackend 
-     * @param Sabre_CalDAV_Backend_Abstract $caldavBackend 
-     * @param string $principalPrefix
+     * @param Sabre_CardDAV_Backend_Abstract $carddavBackend
+     * @param string $principalPrefix 
      */
-    public function __construct(Sabre_DAVACL_IPrincipalBackend $principalBackend,Sabre_CalDAV_Backend_Abstract $caldavBackend, $principalPrefix = 'principals') {
+    public function __construct(Sabre_DAVACL_IPrincipalBackend $principalBackend,Sabre_CardDAV_Backend_Abstract $carddavBackend, $principalPrefix = 'principals') {
 
+        $this->carddavBackend = $carddavBackend;
         parent::__construct($principalBackend, $principalPrefix);
-        $this->caldavBackend = $caldavBackend;
 
     }
 
     /**
-     * Returns the nodename
-     *
-     * We're overriding this, because the default will be the 'principalPrefix',
-     * and we want it to be Sabre_CalDAV_Plugin::CALENDAR_ROOT 
+     * Returns the name of the node 
      * 
-     * @return void
+     * @return string 
      */
     public function getName() {
 
-        return Sabre_CalDAV_Plugin::CALENDAR_ROOT;
+        return Sabre_CardDAV_Plugin::ADDRESSBOOK_ROOT;
 
     }
 
@@ -67,7 +70,7 @@ class Sabre_CalDAV_CalendarRootNode extends Sabre_DAVACL_AbstractPrincipalCollec
      * @return Sabre_DAV_INode 
      */
     public function getChildForPrincipal(array $principal) {
-        return new Sabre_CalDAV_UserCalendars($this->principalBackend, $this->caldavBackend, $principal['uri']);
+        return new Sabre_CardDAV_UserAddressBooks($this->carddavBackend, $principal['uri']);
 
     }
 

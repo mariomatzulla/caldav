@@ -29,7 +29,7 @@
  ***************************************************************/
 
 define('ICALENDAR_PATH', 	t3lib_extMgm::extPath('cal').'model/class.tx_model_iCalendar.php');
-require_once(t3lib_extMgm::extPath('cal').'controller/class.tx_cal_functions.php');
+#require_once(t3lib_extMgm::extPath('cal').'controller/class.tx_cal_functions.php');
 
 /**
  * This hook extends the tcemain class.
@@ -65,7 +65,7 @@ class tx_caldav_tcemain_processdatamap {
 					$tx_cal_api = &$tx_cal_api->tx_cal_api_without($pageIDForPlugin);
 
 					if($table == 'tx_cal_event'){
-						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', '', false, false, false, true, true);
+						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', $tx_cal_api->conf['pidList'], false, false, false, true, true);
 
 						if ($eventObject->conf['view.']['event.']['phpicalendarEventTemplate']) {
 							$oldPath = &$eventObject->conf['view.']['event.']['phpicalendarEventTemplate'];
@@ -76,6 +76,7 @@ class tx_caldav_tcemain_processdatamap {
 						$eventObject->conf['view'] = 'single_ics';
 						$extPath=t3lib_extMgm::extPath('cal');
 						
+						$oldPath = 'EXT:cal/standard_template/event_model.tmpl';
 						$oldPath = str_replace('EXT:cal/', $extPath, $oldPath);
 						//$oldPath = str_replace(PATH_site, '', $oldPath);
 						$eventObject->conf['view.']['event.']['phpicalendarEventTemplate'] = $oldPath;

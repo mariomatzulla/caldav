@@ -49,11 +49,12 @@ class Sabre_DAV_ObjectTree extends Sabre_DAV_Tree {
      */
     public function getNodeForPath($path) {
 
-        $path = trim($path,'/');
+    	$path = trim($path,'/');
         if (isset($this->cache[$path])) return $this->cache[$path];
 
         //if (!$path || $path=='.') return $this->rootNode;
         $currentNode = $this->rootNode;
+
         $i=0;
         // We're splitting up the path variable into folder/subfolder components and traverse to the correct node.. 
         foreach(explode('/',$path) as $pathPart) {
@@ -65,8 +66,7 @@ class Sabre_DAV_ObjectTree extends Sabre_DAV_Tree {
             	die();
                 throw new Sabre_DAV_Exception_FileNotFound('Could not find node at path: ' . $path);
             }
-            $currentNode = $currentNode->getChild($pathPart); 
-
+            $currentNode = $currentNode->getChild($pathPart);
         }
 
         $this->cache[$path] = $currentNode;
@@ -108,7 +108,6 @@ class Sabre_DAV_ObjectTree extends Sabre_DAV_Tree {
      * @return array 
      */
     public function getChildren($path) {
-
         $node = $this->getNodeForPath($path);
         $children = $node->getChildren();
         foreach($children as $child) {
