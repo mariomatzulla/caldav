@@ -1,35 +1,31 @@
 <?php
-/***************************************************************
+namespace TYPO3\CMS\Caldav\Hooks;
+/**
+ * *************************************************************
  * Copyright notice
  *
- * (c) 2005-2008 Mario Matzulla
- * (c) 2005-2008 Christian Technology Ministries International Inc.
+ * (c) 2010-2015 Mario Matzulla (mario(at)matzullas.de)
  * All rights reserved
  *
- * This file is part of the Web-Empowered Church (WEC)
- * (http://WebEmpoweredChurch.org) ministry of Christian Technology Ministries 
- * International (http://CTMIinc.org). The WEC is developing TYPO3-based
- * (http://typo3.org) free software for churches around the world. Our desire
- * is to use the Internet to help offer new life through Jesus Christ. Please
- * see http://WebEmpoweredChurch.org/Jesus.
- *
- * You can redistribute this file and/or modify it under the terms of the 
- * GNU General Public License as published by the Free Software Foundation;
- * either version 2 of the License, or (at your option) any later version.
+ * This script is part of the TYPO3 project. The TYPO3 project is
+ * free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * The GNU General Public License can be found at
  * http://www.gnu.org/copyleft/gpl.html.
  *
- * This file is distributed in the hope that it will be useful for ministry,
+ * This script is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- * This copyright notice MUST APPEAR in all copies of the file!
- ***************************************************************/
+ * This copyright notice MUST APPEAR in all copies of the script!
+ * *************************************************************
+ */
 
-define('ICALENDAR_PATH', 	t3lib_extMgm::extPath('cal').'model/class.tx_model_iCalendar.php');
-#require_once(t3lib_extMgm::extPath('cal').'controller/class.tx_cal_functions.php');
+define ('ICALENDAR_PATH', \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath ('cal') . 'Classes/Model/ICalendar.php');
 
 /**
  * This hook extends the tcemain class.
@@ -37,15 +33,13 @@ define('ICALENDAR_PATH', 	t3lib_extMgm::extPath('cal').'model/class.tx_model_iCa
  *
  * @author	Mario Matzulla <mario(at)matzullas.de>
  */
-class tx_caldav_tcemain_processdatamap {
+class TceMainProcessdatamap {
 
 	
 	function processDatamap_afterDatabaseOperations($status, $table, $id, &$fieldArray, &$tcemain) {
 		
 		/* If we have a new calendar event */
 		if (($table == 'tx_cal_event' || $table == 'tx_cal_exception_event') && count($fieldArray)>1) {
-			require_once(t3lib_extMgm::extPath('cal').'controller/class.tx_cal_functions.php');
-			require_once(t3lib_extMgm::extPath('cal').'/controller/class.tx_cal_api.php');
 			$event = t3lib_BEfunc::getRecord ($table, $status=='new'?$tcemain->substNEWwithIDs[$id]:$id);
 			
 			/* If we're in a workspace, don't notify anyone about the event */

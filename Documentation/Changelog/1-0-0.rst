@@ -1,0 +1,9 @@
+
+1.0.0 - TYPO3 LTS 6.2 & TYPO3 7
+--------------------------------
+
+::
+
+	* Bug #65489  - TYPO3 6.2 compatibility
+	* Feature     - Documentation converted to sphinx
+

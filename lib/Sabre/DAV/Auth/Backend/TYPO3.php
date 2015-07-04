@@ -7,7 +7,7 @@
  * 
  * @package Sabre
  * @subpackage DAV
- * @copyright Copyright (C) 2012 Mario Matzulla. All rights reserved.
+ * @copyright Copyright (C) 2012-2015 Mario Matzulla. All rights reserved.
  * @author Mario Matzulla (http://www.matzullas.de)
  * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
  */

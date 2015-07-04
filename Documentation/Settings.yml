@@ -1,0 +1,15 @@
+conf.py:
+  copyright: 2010-2015
+  project: CalDAV
+  version: 1.1
+  release: 1.1.0
+  latex_documents:
+  - - Index
+    - caldav.tex
+    - CalDAV
+    - Mario Matzulla
+    - manual
+  latex_elements:
+    papersize: a4paper
+    pointsize: 10pt
+    preamble: \usepackage{typo3}

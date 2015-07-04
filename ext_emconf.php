@@ -12,24 +12,25 @@
  * *************************************************************
  */
 
-$EM_CONF[$_EXTKEY] = array(
-	'title' => 'CalDAV',
-	'description' => 'Extends Calendar Base with CalDAV functionality.',
-	'category' => 'plugin',
-	'shy' => 0,
-	'version' => '1.0.0',
-	'loadOrder' => '',
-	'state' => 'stable',
-	'uploadfolder' => 0,
-	'clearCacheOnLoad' => 1,
-	'author' => 'Mario Matzulla',
-	'author_email' => 'mario@matzullas.de',
-	'shy' => '',
-	'constraints' => array (
-		'depends' => array (
-			'cal' => '1.7.0-' 
-		),
-	)
+$EM_CONF [$_EXTKEY] = array (
+		'title' => 'CalDAV',
+		'description' => 'Extends Calendar Base with CalDAV functionality.',
+		'category' => 'plugin',
+		'shy' => 0,
+		'version' => '1.1.0',
+		'loadOrder' => '',
+		'state' => 'stable',
+		'uploadfolder' => 0,
+		'clearCacheOnLoad' => 0,
+		'author' => 'Mario Matzulla',
+		'author_email' => 'mario@matzullas.de',
+		'author_company' => '',
+		'constraints' => array (
+				'depends' => array (
+						'cal' => '1.9.0-'
+				)
+		)
 );
+
 
 ?>

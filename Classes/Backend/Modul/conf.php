@@ -11,5 +11,5 @@ $MCONF["access"]="admin";
 $MCONF["script"]="_DISPATCH";
 
 $MLANG["default"]["tabs_images"]["tab"] = "moduleicon.gif";
-$MLANG["default"]["ll_ref"]="LLL:EXT:caldav/mod1/locallang_mod.xml";
+$MLANG ["default"] ["ll_ref"] = "LLL:EXT:caldav/Resources/Private/Language/locallang_ics_generator_mod.xml";
 ?>

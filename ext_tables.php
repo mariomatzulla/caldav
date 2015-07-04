@@ -3,8 +3,10 @@ if (!defined ('TYPO3_MODE')) {
 	die ('Access denied.');
 }
 
+$extPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath ($_EXTKEY);
+
 if (TYPO3_MODE=="BE")	{
-	t3lib_extMgm::addModule("tools","calicsgenerator","",t3lib_extMgm::extPath($_EXTKEY)."mod1/");
+	\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addModule("tools","calicsgenerator","",$extPath."Classes/Backend/Modul/");
 }
 
 

@@ -1,0 +1,7 @@
+﻿.. |img-4|      image:: ../../Images/frontend_user_calendar.png
+.. :align: left
+.. :border: 0
+.. :hspace: 12
+.. :name: Frontend User Calendar
+
+

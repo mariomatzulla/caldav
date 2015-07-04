@@ -11,8 +11,8 @@
  *
  * @package Sabre
  * @subpackage DAVACL
- * @copyright Copyright (C) 2007-2012 Rooftop Solutions. All rights reserved.
- * @author Evert Pot (http://www.rooftopsolutions.nl/) 
+ * @copyright Copyright (C) 2012-2015 Mario Matzulla. All rights reserved.
+ * @author Mario Matzulla (http://www.matzullas.de)
  * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
  */
 class Sabre_DAVACL_PrincipalBackend_TYPO3 implements Sabre_DAVACL_IPrincipalBackend {
@@ -70,19 +70,19 @@ class Sabre_DAVACL_PrincipalBackend_TYPO3 implements Sabre_DAVACL_IPrincipalBack
      * @return array 
      */
     public function getPrincipalsByPrefix($prefixPath) {
-        $result = $this->pdo->query('SELECT uri, email, displayname FROM `'. $this->tableName . '`');
+        $result = $this->pdo->query('SELECT username, email, name FROM `'. $this->tableName . '`');
 
         $principals = array();
 
         while($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
             // Checking if the principal is in the prefix
-            list($rowPrefix) = Sabre_DAV_URLUtil::splitPath($row['uri']);
+            list($rowPrefix) = Sabre_DAV_URLUtil::splitPath('principals/'.$row['username']);
             if ($rowPrefix !== $prefixPath) continue;
 
             $principals[] = array(
-                'uri' => $row['uri'],
-                '{DAV:}displayname' => $row['displayname']?$row['displayname']:basename($row['uri']),
+                'uri' => 'principals/'.$row['username'],
+                '{DAV:}displayname' => $row['name']?$row['name']:basename('principals/'.$row['username']),
                 '{http://sabredav.org/ns}email-address' => $row['email'],
             );
 

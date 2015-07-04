@@ -21,15 +21,8 @@ $TYPO3_MISC['microtime_start'] = microtime(true);
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','FE');
 
-#if(!defined('PATH_thisScript')) {
-##	define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
-##		(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
-##		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
-##		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
-##		($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
-#	define('PATH_thisScript',str_replace('//', '/', str_replace('\\', '/',dirname($_SERVER['SCRIPT_FILENAME']))));
 $PATH_thisScript = str_replace('//', '/', str_replace('\\', '/',dirname($_SERVER['SCRIPT_FILENAME'])));
-#}
+
 if (!defined('PATH_site')) 			define('PATH_site', str_replace('typo3conf/ext/caldav','',$PATH_thisScript));
 if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
 
@@ -107,10 +100,6 @@ $TSFE->sendRedirect();
 
 $TT->pull();
 
-#require_once(t3lib_extMgm::extPath('simulatestatic').'class.tx_simulatestatic.php');
-#require_once(t3lib_extMgm::extPath('statictemplates').'class.tx_statictemplates.php');
-require_once(t3lib_extMgm::extPath('cal').'model/class.tx_cal_date.php');
-require_once(t3lib_extMgm::extPath('cal').'service/class.tx_cal_icalendar_service.php');
 /*
 
 CalendarServer example
@@ -149,8 +138,9 @@ require_once PATH_typo3conf.'/ext/caldav/lib/Sabre/autoload.php';
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre_CalDAV_TYPO3Server($pdo);
 
-if (isset($baseUri))
+if (isset($baseUri)) {
     $server->setBaseUri($baseUri);
+}
 
 // Support for html frontend
 $browser = new Sabre_DAV_Browser_Plugin();

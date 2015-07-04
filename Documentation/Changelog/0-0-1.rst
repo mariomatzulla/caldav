@@ -1,31 +1,39 @@
-2011-05-03  jeff
+
+0.0.1 - TYPO3 LTS 4.5
+--------------------------------
+
+::
+
+	* initial upload
+	
+	2011-05-03  jeff
 
 	* ext_icon.gif: Updated extension icon.
 	* ext_emconf.php: Raised state to beta.
 	* ChangeLog, LICENSE, lib/ChangeLog, lib/LICENSE: Moved external
 	  license and changelog files into lib directory.
 
-2011-02-10  mario
+	2011-02-10  mario
 
 	* doc/manual.sxw, ext_conf_template.txt: updated pid configuration
 
-2010-11-16  mario
+	2010-11-16  mario
 
 	* doc/manual.sxw: updated manual
 
-2010-11-13  mario
+	2010-11-13  mario
 
 	* ext_emconf.php: added dependency version for cal
 	* ext_emconf.php: updated version and md5 values
 	* ext_tables.sql: fixed sql
 	* doc, doc/manual.sxw: added docu
 
-2010-11-10  mario
+	2010-11-10  mario
 
 	* ext_conf_template.txt, lib/Sabre/DAV/Auth/Backend/TYPO3.php:
 	  switched from digest to basic auth -> using TYPO3 auth
 
-2010-11-01  mario
+	2010-11-01  mario
 
 	* .buildpath, .project, ChangeLog, LICENSE, _htaccess, caldav.php,
 	  ext_autoload.php, ext_emconf.php, ext_icon.gif,
@@ -117,4 +125,3 @@
 	  lib/Sabre/autoload.php, locallang_db.xml: initial upload
 	* .: Share project "caldav" into
 	  "http://svn.webempoweredchurch.org/repos/calendar"
-
