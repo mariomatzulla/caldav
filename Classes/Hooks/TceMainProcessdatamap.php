@@ -60,6 +60,10 @@ class TceMainProcessdatamap {
 				if($page['doktype'] != 254) {
 					$tx_cal_api = new \TYPO3\CMS\Cal\Controller\Api ();
 					$tx_cal_api = &$tx_cal_api->tx_cal_api_without($pageIDForPlugin);
+					
+					if(! isset ($tx_cal_api->conf ['view.'] ['allowedViewsToLinkTo'])) {
+						return;
+					}
 
 					if($table == 'tx_cal_event'){
 						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', $tx_cal_api->conf['pidList'], false, false, false, true, true);
