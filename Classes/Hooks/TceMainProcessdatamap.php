@@ -27,6 +27,9 @@ namespace TYPO3\CMS\Caldav\Hooks;
 
 define ('ICALENDAR_PATH', \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath ('cal') . 'Classes/Model/ICalendar.php');
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * This hook extends the tcemain class.
  * It catches changes on tx_cal_event
@@ -36,26 +39,26 @@ define ('ICALENDAR_PATH', \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::ex
 class TceMainProcessdatamap {
 
 	
-	function processDatamap_afterDatabaseOperations($status, $table, $id, &$fieldArray, &$tcemain) {
+	public function processDatamap_afterDatabaseOperations($status, $table, $id, &$fieldArray, &$tcemain) {
 		
 		/* If we have a new calendar event */
 		if (($table == 'tx_cal_event' || $table == 'tx_cal_exception_event') && count($fieldArray)>1) {
-			$event = t3lib_BEfunc::getRecord ($table, $status=='new'?$tcemain->substNEWwithIDs[$id]:$id);
+			$event = BackendUtility::getRecord ($table, $status=='new'?$tcemain->substNEWwithIDs[$id]:$id);
 			
 			/* If we're in a workspace, don't notify anyone about the event */
 			if($event['pid'] > 0) {
 				/* Check Page TSConfig for a preview page that we should use */
-				$pageTSConf = t3lib_befunc::getPagesTSconfig($event['pid']);
+				$pageTSConf = BackendUtility::getPagesTSconfig($event['pid']);
 				if($pageTSConf['options.']['tx_cal_controller.']['pageIDForPlugin']) {
 					$pageIDForPlugin = $pageTSConf['options.']['tx_cal_controller.']['pageIDForPlugin'];
 				} else {
 					$pageIDForPlugin = $event['pid'];
 				}
 			
-				$page = t3lib_BEfunc::getRecord('pages', intval($pageIDForPlugin), 'doktype');
+				$page = BackendUtility::getRecord('pages', intval($pageIDForPlugin), 'doktype');
 
 				if($page['doktype'] != 254) {
-					$tx_cal_api = t3lib_div :: makeInstance('tx_cal_api');
+					$tx_cal_api = new \TYPO3\CMS\Cal\Controller\Api ();
 					$tx_cal_api = &$tx_cal_api->tx_cal_api_without($pageIDForPlugin);
 
 					if($table == 'tx_cal_event'){
@@ -68,19 +71,19 @@ class TceMainProcessdatamap {
 						}
 						$oldView = $eventObject->conf['view'];
 						$eventObject->conf['view'] = 'single_ics';
-						$extPath=t3lib_extMgm::extPath('cal');
+						$extPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath ('cal');
 						
-						$oldPath = 'EXT:cal/standard_template/event_model.tmpl';
+						$oldPath = 'EXT:cal/Resources/Private/Templates/v2/event_model.tmpl';
 						$oldPath = str_replace('EXT:cal/', $extPath, $oldPath);
 						//$oldPath = str_replace(PATH_site, '', $oldPath);
 						$eventObject->conf['view.']['event.']['phpicalendarEventTemplate'] = $oldPath;
 						$eventObject->conf['view.']['event.']['eventModelTemplate'] = $oldPath;
 						$oldBackPath = $GLOBALS['TSFE']->tmpl->getFileName_backPath;
 						$GLOBALS['TSFE']->tmpl->getFileName_backPath = '';
-						$fileInfo = t3lib_div::split_fileref($oldPath);
+						$fileInfo = GeneralUtility::split_fileref($oldPath);
 						$GLOBALS['TSFE']->tmpl->allowedPaths[] = $fileInfo['path'];
 						
-						$viewObj = &tx_cal_registry::Registry('basic','viewcontroller');
+						$viewObj = \TYPO3\CMS\Cal\Utility\Registry::Registry('basic','viewcontroller');
 						$masterArray = Array($eventObject);
 						$drawnIcs = $viewObj->drawIcs($masterArray, '', false);
 						$table = 'tx_cal_event';
