@@ -33,7 +33,7 @@ class IcsGenerator {
 	var $pageIDForPlugin;
 	var $extConf;
 	var $table = 'tx_cal_event,tx_cal_calendar';
-	var $where = 'tx_cal_event.calendar_id = tx_cal_calendar.uid and tx_cal_calendar.type = 0 and tx_cal_calendar.nearby = 0 and tx_cal_event.type in (0,1,2,3) and tx_cal_event.deleted = 0 and tx_cal_event.hidden = 0 and tx_cal_calendar.deleted = 0 and tx_cal_calendar.hidden = 0 and ((tx_cal_event.tx_caldav_data is null) or (tx_cal_event.tx_caldav_data like "%no event model template file found%" OR tx_cal_event.tx_caldav_data like "%no event model template file found:%"))';
+	var $where = 'tx_cal_event.calendar_id = tx_cal_calendar.uid and tx_cal_calendar.type = 0 and tx_cal_calendar.nearby = 0 and tx_cal_event.type in (0,1,2,3) and tx_cal_event.deleted = 0 and tx_cal_event.hidden = 0 and tx_cal_calendar.deleted = 0 and tx_cal_calendar.hidden = 0 and ((tx_cal_event.tx_caldav_data is null) or (tx_cal_event.tx_caldav_data like "%no event model template file found%" OR tx_cal_event.tx_caldav_data like "%no event model template file found:%" OR tx_cal_event.tx_caldav_data like "%could not find%"))';
 	function __construct($pageIDForPlugin) {
 		$this->extConf = unserialize ( $GLOBALS ['TYPO3_CONF_VARS'] ['EXT'] ['extConf'] ['cal'] );
 		$this->pageIDForPlugin = $pageIDForPlugin;
