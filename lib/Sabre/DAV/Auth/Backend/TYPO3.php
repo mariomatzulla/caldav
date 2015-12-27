@@ -52,18 +52,13 @@ class Sabre_DAV_Auth_Backend_TYPO3 extends Sabre_DAV_Auth_Backend_AbstractBasic 
      * @return bool|array
      */
     protected function validateUserPass($username, $password){
-		global $TYPO3_CONF_VARS;
-    	$formfield_uname = 'user'; 				// formfield with login-name
-		$formfield_uident = 'pass'; 			// formfield with password
-		$formfield_chalvalue = 'challenge';		// formfield with a unique value which is used to encrypt the password and username
-		$formfield_status = 'logintype';
     	$_GET['logintype'] = 'login';
 		$_GET['user'] = $username;
 		$_GET['pass'] = $password;
 		$_GET['challenge'] = '';
-		$confArr = unserialize($TYPO3_CONF_VARS['EXT']['extConf']['caldav']);
+		$confArr = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['caldav']);
 		$_GET['pid'] = $confArr['pids'];
-		$TYPO3_CONF_VARS['FE']['loginSecurityLevel']='normal';		
+		$GLOBALS['TYPO3_CONF_VARS']['FE']['loginSecurityLevel']='normal';		
 		//require_once (PATH_tslib.'/class.tslib_eidtools.php');
 
 		$feUserObj = \TYPO3\CMS\Frontend\Utility\EidUtility::initFeUser();
