@@ -68,11 +68,8 @@ class TceMainProcessdatamap {
 					if($table == 'tx_cal_event'){
 						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', $tx_cal_api->conf['pidList'], false, false, false, true, true);
 
-						if ($eventObject->conf['view.']['event.']['phpicalendarEventTemplate']) {
-							$oldPath = &$eventObject->conf['view.']['event.']['phpicalendarEventTemplate'];
-						} else {
-							$oldPath = &$eventObject->conf['view.']['event.']['eventModelTemplate'];
-						}
+						$oldPath = &$eventObject->conf['view.']['event.']['eventModelTemplate'];
+						
 						$oldView = $eventObject->conf['view'];
 						$eventObject->conf['view'] = 'single_ics';
 						$extPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath ('cal');
@@ -80,7 +77,6 @@ class TceMainProcessdatamap {
 						$oldPath = 'EXT:cal/Resources/Private/Templates/v2/event_model.tmpl';
 						$oldPath = str_replace('EXT:cal/', $extPath, $oldPath);
 						//$oldPath = str_replace(PATH_site, '', $oldPath);
-						$eventObject->conf['view.']['event.']['phpicalendarEventTemplate'] = $oldPath;
 						$eventObject->conf['view.']['event.']['eventModelTemplate'] = $oldPath;
 						$oldBackPath = $GLOBALS['TSFE']->tmpl->getFileName_backPath;
 						$GLOBALS['TSFE']->tmpl->getFileName_backPath = '';
