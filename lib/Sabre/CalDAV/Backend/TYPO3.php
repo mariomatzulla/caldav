@@ -463,7 +463,7 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 				$calendarId 
 		) );
 		$calendarRow = $stmt->fetch ();
-		$pageTSConf = t3lib_befunc::getPagesTSconfig ( $calendarRow ['pid'] );
+		$pageTSConf = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig ( $calendarRow ['pid'] );
 		$pageIDForPlugin = $calendarRow ['pid'];
 		if ($pageTSConf ['options.'] ['tx_cal_controller.'] ['pageIDForPlugin']) {
 			$pageIDForPlugin = $pageTSConf ['options.'] ['tx_cal_controller.'] ['pageIDForPlugin'];
@@ -476,19 +476,30 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 		$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger(__CLASS__);
 		
 		foreach ( $components->_components as $component ) {
-			if (is_a ( $component, '\TYPO3\CMS\Cal\Model\ICalendar\vevent' )) {
-				$logger->info('is_a vevent');
+			if ($component->getType() == 'vEvent') {
+				$logger->info('is_a ' . $component->getType());
 				$logger->info($component->getAttribute('UID'));
-				$stmt = $this->pdo->prepare ( 'UPDATE tx_cal_event SET icsUid = ? WHERE tx_caldav_uid = ?' );
+				$stmt = $this->pdo->prepare ( 'UPDATE tx_cal_event SET icsUid = ?, type = ? WHERE tx_caldav_uid = ?' );
 				$stmt->execute ( array (
 						$component->getAttribute ( 'UID' ),
+						0,
 						$objectUri 
+				) );
+			} else if ($component->getType() == 'vTodo') {
+				$logger->info('is_a ' . $component->getType());
+				$logger->info($component->getAttribute('UID'));
+				$stmt = $this->pdo->prepare ( 'UPDATE tx_cal_event SET icsUid = ?, type = ? WHERE tx_caldav_uid = ?' );
+				$stmt->execute ( array (
+						$component->getAttribute ( 'UID' ),
+						4,
+						$objectUri
 				) );
 			}
 		}
-		$service->insertCalEventsIntoDB ( $components->_components, $calendarId, $calendarRow ['pid'], 0, 0 );
+		$service->insertCalEventsIntoDB ( $components->_components, $calendarId, $calendarRow ['pid'], 0, 0, FALSE );
 		$this->clearCache ( $calendarRow ['pid'] );
 	}
+	
 	private function clearCache($pid) {
 		$pageTSConf = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig ( $pid );
 		$pageIDForPlugin = $pid;
@@ -498,6 +509,8 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 		}
 		
 		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance ( 'TYPO3\\CMS\\Core\\DataHandling\\DataHandler' );
-// 		$tce->clear_cacheCmd ( $pageIDForPlugin ); // ID of the page for which to clear the cache
+		$tce->stripslashes_values = FALSE;
+		$tce->start(array(), array());
+ 		//$tce->clear_cacheCmd ( $pageIDForPlugin ); // ID of the page for which to clear the cache
 	}
 }
