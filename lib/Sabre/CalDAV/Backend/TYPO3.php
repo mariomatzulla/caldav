@@ -440,11 +440,12 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 	 * @return void
 	 */
 	public function deleteCalendarObject($calendarId, $objectUri) {
-		$stmt = $this->pdo->prepare ( 'SELECT * FROM tx_cal_event WHERE calendar_id = ?' );
+		$stmt = $this->pdo->prepare ( 'SELECT * FROM tx_cal_event WHERE calendar_id = ? AND icsUid = ? AND deleted = 0' );
 		$stmt->execute ( array (
-				$calendarId 
+				$calendarId,
+				$objectUri
 		) );
-		$calendarRow = $stmt->fetch ();
+		$eventRow = $stmt->fetch ();
 		
 		$stmt = $this->pdo->prepare ( 'DELETE FROM tx_cal_event WHERE calendar_id = ? AND icsUid = ? AND deleted = 0' );
 		$stmt->execute ( array (
@@ -455,7 +456,10 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 		$stmt->execute ( array (
 				$calendarId 
 		) );
-		$this->clearCache ( $calendarRow ['pid'] );
+		
+		$service = new \TYPO3\CMS\Cal\Service\ICalendarService ();
+		$service->clearAllImagesAndAttachments($eventRow['uid']);
+		$this->clearCache ( $eventRow ['pid'] );
 	}
 	private function updateCalEvent($calendarId, $objectUri, $calendarData) {
 		$stmt = $this->pdo->prepare ( 'SELECT * FROM tx_cal_calendar WHERE uid = ?' );
@@ -503,14 +507,16 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 	private function clearCache($pid) {
 		$pageTSConf = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig ( $pid );
 		$pageIDForPlugin = $pid;
-		
+			
 		if ($pageTSConf ['TCEMAIN.'] ['clearCacheCmd']) {
 			$pageIDForPlugin = $pageTSConf ['TCEMAIN.'] ['clearCacheCmd'];
 		}
-		
-		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance ( 'TYPO3\\CMS\\Core\\DataHandling\\DataHandler' );
-		$tce->stripslashes_values = FALSE;
-		$tce->start(array(), array());
- 		//$tce->clear_cacheCmd ( $pageIDForPlugin ); // ID of the page for which to clear the cache
+			
+		/** @var $tcemain \TYPO3\CMS\Core\DataHandling\DataHandler */
+		$tcemain = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
+		$tcemain->stripslashes_values = 0;
+		$tcemain->start(array(), array(), new \TYPO3\CMS\Caldav\Backend\FakeBeUser($pid));
+ 		$tcemain->clear_cacheCmd ( $pageIDForPlugin ); // ID of the page for which to clear the cache
 	}
+	
 }
