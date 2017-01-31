@@ -39,7 +39,7 @@ $BE_USER->modAccess ($MCONF, 1); // This checks permissions and exits if the use
 // DEFAULT initialization of a module [END]
 
 // Make instance:
-$SOBE = new \TYPO3\CMS\Caldav\Backend\Modul\IcsGeneratorModul ();
+$SOBE = new \TYPO3\CMS\Caldav\Backend\Modul\IcsGeneratorModulOld ();
 $SOBE->init ();
 
 $SOBE->main ();

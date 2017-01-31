@@ -25,10 +25,15 @@ namespace TYPO3\CMS\Caldav\Backend\Modul;
  * This copyright notice MUST APPEAR in all copies of the script!
  * *************************************************************
  */
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 
 /**
  * Module 'Indexer' for the 'cal' extension.
@@ -36,29 +41,143 @@ use TYPO3\CMS\Core\Messaging\FlashMessageService;
  * @author Mario Matzulla <mario(at)matzullas.de>
  */
 class IcsGeneratorModul extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
+	
+	/**
+	 * Array containing submitted data when editing or adding a task
+	 *
+	 * @var array
+	 */
+	protected $submittedData = [];
+	
+	/**
+	 * Array containing all messages issued by the application logic
+	 * Contains the error's severity and the message itself
+	 *
+	 * @var array
+	 */
+	protected $messages = [];
+	
+	/**
+	 * @var string Key of the CSH file
+	 */
+	protected $cshKey;
+	
+	/**
+	 * @var string
+	 */
+	protected $backendTemplatePath = '';
+	
+	/**
+	 * @var \TYPO3\CMS\Fluid\View\StandaloneView
+	 */
+	protected $view;
+	
+	/**
+	 * The name of the module
+	 *
+	 * @var string
+	 */
+	protected $moduleName = 'tools_txcaldavM1';
+	
+	/**
+	 * @var string Base URI of scheduler module
+	 */
+	protected $moduleUri;
+	
+	/**
+	 * ModuleTemplate Container
+	 *
+	 * @var ModuleTemplate
+	 */
+	protected $moduleTemplate;
+	
 	var $pageinfo;
 	
 	/**
+	 * @return \TYPO3\CMS\Caldav\Backend\Modul\IcsGeneratorModul
 	 */
-	function init() {
-		global $BE_USER, $BACK_PATH, $TCA_DESCR, $TCA, $CLIENT, $TYPO3_CONF_VARS;
-		
-		parent::init ();
+	public function __construct()
+	{
+		$this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
+		$this->getLanguageService()->includeLLFile('EXT:caldav/Resources/Private/Language/locallang_ics_generator.xml');
+		$this->MCONF = [
+				'name' => $this->moduleName,
+		];
+		$this->cshKey = '_MOD_' . $this->moduleName;
+		$this->backendTemplatePath = ExtensionManagementUtility::extPath('cal') . 'Resources/Private/Templates/Backend/IcsGenerator/';
+		$this->view = GeneralUtility::makeInstance(\TYPO3\CMS\Fluid\View\StandaloneView::class);
+		$this->view->getRequest()->setControllerExtensionName('caldav');
+		$this->view->setPartialRootPaths([ExtensionManagementUtility::extPath('caldav') . 'Resources/Private/Templates/Backend/IcsGenerator/Partials/']);
+		$this->moduleUri = BackendUtility::getModuleUrl($this->moduleName);
+	
+		$pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
+		$pageRenderer->loadRequireJsModule('TYPO3/CMS/Backend/Modal');
+		$pageRenderer->loadRequireJsModule('TYPO3/CMS/Backend/SplitButtons');
 	}
 	
 	/**
 	 * Adds items to the ->MOD_MENU array.
 	 * Used for the function menu selector.
 	 */
-	function menuConfig() {
+	public function menuConfig() {
 		$this->MOD_MENU = Array (
 				'function' => Array (
-						'1' => $GLOBALS ['LANG']->getLL ( 'function1' ),
-						'2' => $GLOBALS ['LANG']->getLL ( 'function2' ),
-						'3' => $GLOBALS ['LANG']->getLL ( 'function3' ) 
+						'1' => $this->getLanguageService()->getLL ( 'function1' ),
+						'2' => $this->getLanguageService()->getLL ( 'function2' ),
+						'3' => $this->getLanguageService()->getLL ( 'function3' ) 
 				) 
 		);
 		parent::menuConfig ();
+	}
+	
+	/**
+	 * Injects the request object for the current request or subrequest
+	 * Simply calls main() and init() and outputs the content
+	 *
+	 * @param ServerRequestInterface $request the current request
+	 * @param ResponseInterface $response
+	 * @return ResponseInterface the response with the content
+	 */
+	public function mainAction(ServerRequestInterface $request, ResponseInterface $response) {
+		$GLOBALS['SOBE'] = $this;
+		$this->init();
+		$this->main();
+	
+		$this->moduleTemplate->setContent($this->content);
+		$response->getBody()->write($this->moduleTemplate->renderContent());
+		return $response;
+	}
+	
+	/**
+	 * Generates the action menu
+	 */
+	protected function getModuleMenu() {
+		$menu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+		$menu->setIdentifier('CaldavJumpMenu');
+	
+		foreach ($this->MOD_MENU['function'] as $controller => $title) {
+				
+			$item = $menu
+			->makeMenuItem()
+			->setHref(
+					BackendUtility::getModuleUrl(
+							$this->moduleName,
+							[
+									'id' => $this->id,
+									'SET' => [
+											'function' => $controller
+									]
+							]
+							)
+					)
+					->setTitle($title);
+						
+					if (intval($controller) == intval($this->MOD_SETTINGS['function'])) {
+						$item->setActive(true);
+					}
+					$menu->addMenuItem($item);
+		}
+		$this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($menu);
 	}
 	
 	// If you chose 'web' as main module, you will need to consider the $this->id parameter which will contain the uid-number of the page clicked in the page tree
@@ -67,78 +186,35 @@ class IcsGeneratorModul extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	 * Write the content to $this->content
 	 */
 	function main() {
-		global $BE_USER, $BACK_PATH, $TCA_DESCR, $TCA, $CLIENT, $TYPO3_CONF_VARS;
 		
 		// Access check!
 		// The page will show only if there is a valid page and if this page may be viewed by the user
 		$this->pageinfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess ( $this->id, $this->perms_clause );
 		$access = is_array ( $this->pageinfo ) ? 1 : 0;
 		
-		if (($this->id && $access) || ($BE_USER->user ['admin'] && ! $this->id)) {
+		if (($this->id && $access) || ($this->getBackendUser()->isAdmin() && ! $this->id)) {
 			
-			// Draw the header.
-			$this->doc = GeneralUtility::makeInstance ( 'TYPO3\\CMS\\Backend\\Template\\DocumentTemplate' );
-			$this->doc->backPath = $BACK_PATH;
-			$this->doc->form = '<form action="" method="POST">';
-			
-			// JavaScript
-			$this->doc->JScode = '
-				<script language="javascript" type="text/javascript">
-					script_ended = 0;
-					function jumpToUrl(URL)	{
-						document.location = URL;
-					}
-				</script>
-			';
-			$this->doc->postCode = '
-				<script language="javascript" type="text/javascript">
-					script_ended = 1;
-					if (top.fsMod) top.fsMod.recentIds["web"] = ' . intval ( $this->id ) . ';
-				</script>
-			';
-			
-			$headerSection = $this->doc->getHeader ( 'pages', $this->pageinfo, $this->pageinfo ['_thePath'] ) . '<br>' . $GLOBALS ['LANG']->sL ( 'LLL:EXT:lang/locallang_core.php:labels.path' ) . ': ' . GeneralUtility::fixed_lgd_cs ( $this->pageinfo ['_thePath'], - 50 );
-			
-			$this->content .= $this->doc->startPage ( $GLOBALS ['LANG']->getLL ( 'title' ) );
-			$this->content .= $this->doc->header ( $GLOBALS ['LANG']->getLL ( 'title' ) );
-			$this->content .= $this->doc->spacer ( 5 );
-			$this->content .= $this->doc->section ( '', $this->doc->funcMenu ( $headerSection, \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncMenu ( $this->id, 'SET[function]', $this->MOD_SETTINGS ['function'], $this->MOD_MENU ['function'] ) ) );
-			$this->content .= $this->doc->divider ( 5 );
-			
-			// Render content:
-			$this->moduleContent ();
-			
-			// ShortCut
-			if ($BE_USER->mayMakeShortcut ()) {
-				$this->content .= $this->doc->spacer ( 20 ) . $this->doc->section ( '', $this->doc->makeShortcutIcon ( 'id', implode ( ',', array_keys ( $this->MOD_MENU ) ), $this->MCONF ['name'] ) );
-			}
-			
-			$this->content .= $this->doc->spacer ( 10 );
+			// Set the form
+			$this->content = '<form name="tx_cal_form" id="tx_cal_form" method="post" action="">';
+		
+			// Prepare main content
+			$this->content .= '<h1>' . $this->getLanguageService()->getLL('function.' . $this->MOD_SETTINGS['function']) . '</h1>';
+			$this->content .= $this->getModuleContent();
+			$this->content .= '</form>';
 		} else {
 			// If no access or if ID == zero
-			
-			$this->doc = GeneralUtility::makeInstance ( 'TYPO3\\CMS\\Backend\\Template\\DocumentTemplate' );
-			$this->doc->backPath = $BACK_PATH;
-			
-			$this->content .= $this->doc->startPage ( $GLOBALS ['LANG']->getLL ( 'title' ) );
-			$this->content .= $this->doc->header ( $GLOBALS ['LANG']->getLL ( 'title' ) );
-			$this->content .= $this->doc->spacer ( 5 );
-			$this->content .= $this->doc->spacer ( 10 );
+			$this->content = '<h1>' . $this->getLanguageService()->getLL('title.') . '</h1>';
+			$this->content .='<div style="padding-top: 5px;"></div>';
 		}
-	}
-	
-	/**
-	 * Prints out the module HTML
-	 */
-	function printContent() {
-		$this->content .= $this->doc->endPage ();
-		echo $this->content;
+		
+		$this->getModuleMenu();
 	}
 	
 	/**
 	 * Generates the module content
 	 */
-	function moduleContent() {
+	protected function getModuleContent() {
+		$content = '';
 		switch (intval ( $this->MOD_SETTINGS ['function'] )) {
 			case 2 :
 				$postVarArray = GeneralUtility::_POST ();
@@ -150,13 +226,16 @@ class IcsGeneratorModul extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 				}
 				
 				if (! empty ( $pageIds )) {
-					$content = $GLOBALS ['LANG']->getLL ( 'generateIcs' ) . '<br/>';
+					$content = $this->getLanguageService()->getLL ( 'generateIcs' ) . '<br/>';
 					$rgc = new \TYPO3\CMS\Caldav\Service\IcsGenerator (0);
-					$this->content .= $this->doc->section ( $GLOBALS ['LANG']->getLL ( 'found' ), $rgc->countEventsWithoutIcs (), 0, 1 );
-					$this->content .= $GLOBALS ['LANG']->getLL ( 'toBeProcessed' );
+					$content .= $this->getLanguageService()->getLL ( 'found' ) . $rgc->countEventsWithoutIcs ();
+					$content .= $this->getLanguageService()->getLL ( 'toBeProcessed' ).'<br /><br />';
 					foreach ( $pageIds as $eventPage => $pluginPage ) {
 						$rgc->pageIDForPlugin = $pluginPage;
-						$this->content .= $this->doc->section ( 'PID ' . $eventPage . $GLOBALS ['LANG']->getLL ( 'generateIcs' ), $rgc->generateIcs (), 0, 1 );
+						$content .= 'PID ' . $eventPage;
+						$content .= '<br /><br />'.$this->getLanguageService()->getLL ( 'generateIcs' );
+						$rgc->generateIcs ();
+						$content .= '<br />'.$rgc->getInfo();
 					}
 				} else {
 					$extConf = unserialize ( $GLOBALS ['TYPO3_CONF_VARS'] ['EXT'] ['extConf'] ['cal'] );
@@ -164,42 +243,43 @@ class IcsGeneratorModul extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 					
 					$pid = 0;
 					$selectFieldIds = Array ();
-					$content .= '<table><tbody>';
-					$content .= '<tr><td>';
-					$content .= '"' . $GLOBALS ['LANG']->getLL ( 'tableHeader2' ) . ' :';
-					$content .= '</td><td>';
-					// $content.='<select id="tceforms-multiselect-'.$pid.'" style="width:250px;" name="pageId'.$pid.'_list" class="formField tceforms-multiselect" size="1"></select>';
-					// $content.='<a href="#" onclick="setFormValueOpenBrowser(\'db\',\'pageId'.$pid.'|||pages|\'); return false;"><img src="sysext/t3skin/icons/gfx/insert3.gif" alt="'.$GLOBALS['LANG']->getLL('browse').'" title="'.$GLOBALS['LANG']->getLL('browse').'" border="0" height="15" width="15"></a>';
-					$content .= '<input type="text" value="" name="pageId">';
-					$content .= '</td></tr>';
-					$selectFieldIds [] = 'pageId' . $pid;
-					$content .= '<tbody></table>';
-					// $content.='<input name="pageId_list" id="pageId" type="text" value="" size="5" maxlength="5"><br />';
-					$scontent .= '<input type="submit" value="' . $GLOBALS ['LANG']->getLL ( 'submit' ) . '" onclick="return markSelections();"/>';
+					$content .= $this->getLanguageService()->getLL ( 'selectPage' ). '<br /><br />';
+					
+					$label = '<label>' . $this->getLanguageService()->getLL('tableHeader2') . '</label>';
+					
+					$table[] =
+							'<div class="form-group col-sm-12" id="pageId_colId'.$pid.'">'
+									. $label
+									. '<div class="form-control-wrap">'
+											. '<div class="input-group" id="pageId_colId'.$pid.'_row-wrapper">'
+													. '<input name="pageId" value="' . $value . '" class="form-control  t3js-clearable" data-date-type="date" data-date-offset="0" type="text" id="tceforms-pageId_colId'.$pid.'_row">'
+															. '</div>'
+																	. '</div>'
+																			. '</div>';
+					$content .= implode(LF, $table);
+					$scontent .= '<br /><br /><input type="submit" value="' . $this->getLanguageService()->getLL ( 'submit' ) . '" onclick="return markSelections();"/>';
 					
 					$selectFields = '';
 					foreach ( $selectFieldIds as $selectFieldId ) {
 						$selectFields .= ' var o' . $selectFieldId . ' = document.getElementById("' . $selectFieldId . '");if(o' . $selectFieldId . '.options.length > 0){o' . $selectFieldId . '.options[0].selected = "selected";} else {notComplete = 1;}';
 					}
-					$content .= '<script type="text/javascript">function markSelections(){ var notComplete = 0;' . $selectFields . ' if(notComplete == 1){alert("' . $GLOBALS ['LANG']->getLL ( 'notAllPagesAssigned' ) . '");return false;}return true;}</script>';
+					$content .= '<script type="text/javascript">function markSelections(){ var notComplete = 0;' . $selectFields . ' if(notComplete == 1){alert("' . $this->getLanguageService()->getLL ( 'notAllPagesAssigned' ) . '");return false;}return true;}</script>';
 					
-					$this->content .= $this->doc->section ( $GLOBALS ['LANG']->getLL ( 'selectPage' ), $content, 0, 1 );
-					$this->content .= $this->doc->section ( $GLOBALS ['LANG']->getLL ( 'startIndexing' ), $scontent, 0, 1 );
+					$content .= $this->getLanguageService()->getLL ( 'startIndexing' ) . $scontent;
 				}
 				break;
 			case 3 :
 				$rgc = new \TYPO3\CMS\Caldav\Service\IcsGenerator (0);
-				$this->content .= $this->doc->section ( 'Check', $rgc->check (), 0, 1 );
+				$content .= '<h2>Check</h2>'. $rgc->check ();
 				break;
 			default :
-				$this->content .= $this->doc->section ( $GLOBALS ['LANG']->getLL ( 'notice_header' ), $GLOBALS ['LANG']->getLL ( 'notice' ), 0, 1 );
-				$this->content .= $this->doc->section ( $GLOBALS ['LANG']->getLL ( 'capabilities_header' ), $GLOBALS ['LANG']->getLL ( 'capabilities' ), 0, 1 );
+				$content .= '<h2>'.$this->getLanguageService()->getLL ( 'notice_header' ).'</h2>';
+				$content .= '<p>'.$this->getLanguageService()->getLL ( 'notice' ).'</p>';
+				$content .= '<h2>'.$this->getLanguageService()->getLL ( 'capabilities_header' ).'</h2>';
+				$content .= '<p>'.$this->getLanguageService()->getLL ( 'capabilities' ).'</p>';
 				break;
 		}
-	}
-	private function getJScode() {
-		$forms = new \TYPO3\CMS\Backend\Form\FormEngine();
-		$forms->backPath = $GLOBALS['BACK_PATH'];
+		return $content;
 	}
 }
 ?>
