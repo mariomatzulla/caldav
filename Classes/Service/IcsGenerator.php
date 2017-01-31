@@ -135,7 +135,7 @@ class IcsGenerator {
 							$table = 'tx_cal_event';
 							$where = 'uid = ' . $event ['uid'];
 							$eventData = Array (
-									'tx_caldav_data' => $drawnIcs 
+									'tx_caldav_data' => rtrim(utf8_encode($drawnIcs)) 
 							);
 							if ($event ['tx_caldav_uid'] == null || $event ['tx_caldav_uid'] == '') {
 								
