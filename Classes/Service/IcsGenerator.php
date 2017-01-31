@@ -34,14 +34,14 @@ class IcsGenerator {
 	var $extConf;
 	var $table = 'tx_cal_event,tx_cal_calendar';
 	var $where = 'tx_cal_event.calendar_id = tx_cal_calendar.uid and tx_cal_calendar.type = 0 and tx_cal_calendar.nearby = 0 and tx_cal_event.type in (0,1,2,3) and tx_cal_event.deleted = 0 and tx_cal_event.hidden = 0 and tx_cal_calendar.deleted = 0 and tx_cal_calendar.hidden = 0 and ((tx_cal_event.tx_caldav_data is null) or (tx_cal_event.tx_caldav_data like "%no event model template file found%" OR tx_cal_event.tx_caldav_data like "%no event model template file found:%" OR tx_cal_event.tx_caldav_data like "%could not find%"))';
-	function __construct($pageIDForPlugin) {
+	public function __construct($pageIDForPlugin) {
 		$this->extConf = unserialize ( $GLOBALS ['TYPO3_CONF_VARS'] ['EXT'] ['extConf'] ['cal'] );
 		$this->pageIDForPlugin = $pageIDForPlugin;
 	}
-	function getInfo() {
+	public function getInfo() {
 		return $this->info;
 	}
-	function check() {
+	public function check() {
 		$select = 'tx_cal_event.*';
 		$table = $this->table;
 		$where = $this->where;
@@ -60,7 +60,7 @@ class IcsGenerator {
 		}
 		return $return;
 	}
-	function countEventsWithoutIcs($eventPage = 0) {
+	public function countEventsWithoutIcs($eventPage = 0) {
 		$count = 0;
 		$select = 'count(*)';
 		$table = $this->table;
@@ -78,7 +78,7 @@ class IcsGenerator {
 		
 		return $count;
 	}
-	function generateIcs($eventPage = 0) {
+	public function generateIcs($eventPage = 0) {
 		$select = 'tx_cal_event.*';
 		$table = $this->table;
 		$where = $this->where;
@@ -115,11 +115,7 @@ class IcsGenerator {
 							$eventObject->conf ['view'] = 'single_ics';
 							$extPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath ( 'cal' );
 							
-							$oldPath = 'EXT:cal/Resources/Private/Templates/v2/event_model.tmpl';
-							$oldPath = str_replace ( 'EXT:cal/', $extPath, $oldPath );
-							// $oldPath = str_replace(PATH_site, '', $oldPath);
-							$eventObject->conf ['view.'] ['event.'] ['phpicalendarEventTemplate'] = $oldPath;
-							$eventObject->conf ['view.'] ['event.'] ['eventModelTemplate'] = $oldPath;
+							$eventObject->conf ['view.'] ['event.'] ['eventModelTemplate'] = $extPath.'Resources/Private/Templates/v2/event_model.tmpl';
 							$oldBackPath = $GLOBALS ['TSFE']->tmpl->getFileName_backPath;
 							$GLOBALS ['TSFE']->tmpl->getFileName_backPath = '';
 							$fileInfo = GeneralUtility::split_fileref ( $oldPath );
@@ -127,9 +123,7 @@ class IcsGenerator {
 							
 							$viewObj = &\TYPO3\CMS\cal\Utility\Registry::Registry ( 'basic', 'viewcontroller' );
 							
-							$masterArray = Array (
-									$eventObject 
-							);
+							$masterArray = Array ( $eventObject );
 							$drawnIcs = $viewObj->drawIcs ( $masterArray, '', false );
 							
 							$table = 'tx_cal_event';
@@ -160,10 +154,6 @@ class IcsGenerator {
 		
 		$this->info = 'Done.';
 	}
-}
-
-if (defined ( 'TYPO3_MODE' ) && $TYPO3_CONF_VARS [TYPO3_MODE] ['XCLASS'] ['ext/caldav/mod1/class.tx_cal_ics_generator.php']) {
-	require_once ($TYPO3_CONF_VARS [TYPO3_MODE] ['XCLASS'] ['ext/caldav/mod1/class.tx_cal_ics_generator.php']);
 }
 
 ?>
