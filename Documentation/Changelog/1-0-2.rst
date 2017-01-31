@@ -1,0 +1,8 @@
+
+1.0.2 - TYPO3 LTS 6.2 & TYPO3 7
+--------------------------------
+
+::
+
+	* Bug		  - Fixed UTF8 encoding of content
+
