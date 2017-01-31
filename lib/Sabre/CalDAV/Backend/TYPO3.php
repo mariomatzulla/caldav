@@ -335,7 +335,7 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 			$preparedArray [] = Array (
 					'id' => $eventRow ['uid'],
 					'displayname' => $eventRow ['title'],
-					'calendardata' => $eventRow ['tx_caldav_data'],
+					'calendardata' => rtrim($eventRow ['tx_caldav_data']),
 					'uri' => $eventRow ['tx_caldav_uid'],
 					'calendarid' => $calendarId,
 					'lastmodified' => $eventRow ['tstamp'] 
@@ -364,7 +364,7 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 		return Array (
 				'id' => $eventRow ['uid'],
 				'displayname' => $eventRow ['title'],
-				'calendardata' => $eventRow ['tx_caldav_data'],
+				'calendardata' => rtrim($eventRow ['tx_caldav_data']),
 				'uri' => $eventRow ['icsUid'],
 				'calendarid' => $calendarId,
 				'lastmodified' => $eventRow ['tstamp'] 
@@ -419,7 +419,7 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 		$calendarRow = $stmt->fetch ();
 		$stmt = $this->pdo->prepare ( 'UPDATE tx_cal_event SET tx_caldav_data = ?, tstamp = ? WHERE calendar_id = ? AND icsUid = ? AND deleted = 0' );
 		$stmt->execute ( array (
-				$calendarData,
+				rtrim($calendarData),
 				time (),
 				$calendarId,
 				$objectUri 
@@ -428,7 +428,7 @@ class Sabre_CalDAV_Backend_TYPO3 extends Sabre_CalDAV_Backend_Abstract {
 		$stmt->execute ( array (
 				$calendarId 
 		) );
-		$this->updateCalEvent ( $calendarId, $objectUri, $calendarData );
+		$this->updateCalEvent ( $calendarId, $objectUri, rtrim($calendarData) );
 		$this->clearCache ( $calendarRow ['pid'] );
 	}
 	

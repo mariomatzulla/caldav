@@ -66,7 +66,7 @@ class TceMainProcessdatamap {
 					}
 
 					if($table == 'tx_cal_event'){
-						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', $tx_cal_api->conf['pidList'], false, false, false, true, true);
+						$eventObject = $tx_cal_api->modelObj->findEvent($event['uid'], 'tx_cal_phpicalendar', $tx_cal_api->conf['pidList'], false, false, false, true, false);
 
 						$oldPath = &$eventObject->conf['view.']['event.']['eventModelTemplate'];
 						
@@ -88,7 +88,7 @@ class TceMainProcessdatamap {
 						$drawnIcs = $viewObj->drawIcs($masterArray, '', false);
 						$table = 'tx_cal_event';
 						$where = 'uid = '.$event['uid'];
-						$eventData = Array('tx_caldav_data'=>$drawnIcs);
+						$eventData = Array('tx_caldav_data'=>utf8_encode($drawnIcs));
 						$result = $GLOBALS['TYPO3_DB']->exec_UPDATEquery($table,$where,$eventData);
 						
 						$table = 'tx_cal_calendar';
