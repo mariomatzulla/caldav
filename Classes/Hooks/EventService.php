@@ -73,7 +73,7 @@ class EventService {
 		$drawnIcs = $viewObj->drawIcs($masterArray, '', false);
 		$table = 'tx_cal_event';
 		$where = 'uid = '.$eventObject->getUid();
-		$eventData = Array('tx_caldav_data'=>$drawnIcs);
+		$eventData = Array('tx_caldav_data'=>utf8_encode($drawnIcs));
 		$result = $GLOBALS['TYPO3_DB']->exec_UPDATEquery($table,$where,$eventData);
 		if (FALSE === $result){
 			throw new \RuntimeException('Could not update event record: '.$GLOBALS ['TYPO3_DB']->sql_error(), 1438367693);
