@@ -1,8 +1,10 @@
 
-1.0.2 - TYPO3 LTS 6.2 & TYPO3 7
+1.0.2 - TYPO3 LTS 6.2, 7, LTS 8
 --------------------------------
 
 ::
 
-	* Bug		  - Fixed UTF8 encoding of content
+	* Bug		- Fixed UTF8 encoding of content
+	* Bug		- Fixed handling of hidden events
+	* Task		- Module TYPO3 8 compatible
 
