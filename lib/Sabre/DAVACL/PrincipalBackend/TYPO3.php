@@ -101,7 +101,7 @@ class Sabre_DAVACL_PrincipalBackend_TYPO3 implements Sabre_DAVACL_IPrincipalBack
      * @return array 
      */
     public function getPrincipalByPath($path) {
-    	$pathParts = t3lib_div::trimExplode('/',$path);
+    	$pathParts = TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('/',$path);
     	$name = $pathParts[1];
         $stmt = $this->pdo->prepare('SELECT uid, username, email, name FROM `'.$this->tableName.'` WHERE username = ?');
         $stmt->execute(array($name));

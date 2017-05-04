@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 // *******************************
 // Checking PHP version
 // *******************************
-if (version_compare(phpversion(), '5.2', '<'))	die ('TYPO3 requires PHP 5.2.0 or higher.');
+if (version_compare(phpversion(), '5.5.0', '<'))	die ('TYPO3 requires PHP 5.5.0 or higher.');
 
 // *******************************
 // Set error reporting
@@ -37,6 +37,7 @@ if (!defined('PATH_tslib')) {
 		define('PATH_tslib', PATH_site.'tslib/');
 	}
 }
+
 $TYPO3_AJAX = false;
 
 define('PATH_thisScript',str_replace('//', '/', str_replace('\\', '/',dirname($_SERVER['SCRIPT_FILENAME']))).'/caldav.php');
@@ -54,16 +55,17 @@ unset($error);
 // *********************
 ob_start();
 
-require __DIR__ . '/../../../typo3/sysext/core/Classes/Core/Bootstrap.php';
+$classLoader = require rtrim(realpath(__DIR__ . '/../../../typo3'), '\\/') . '/../vendor/autoload.php';
 \TYPO3\CMS\Core\Core\Bootstrap::getInstance()
+->initializeClassLoader($classLoader)
 ->baseSetup('')
-->redirectToInstallerIfEssentialConfigurationDoesNotExist();
+->loadConfigurationAndInitialize(TRUE)
+->loadTypo3LoadedExtAndExtLocalconf(TRUE)
+->setFinalCachingFrameworkCacheConfiguration()
+->defineLoggingAndExceptionConstants()
+->unsetReservedGlobalVariables()
+->initializeTypo3DbGlobal();
 
-\TYPO3\CMS\Core\Core\Bootstrap::getInstance()
-	->startOutputBuffering()
-	->loadConfigurationAndInitialize()
-	->loadTypo3LoadedExtAndExtLocalconf(TRUE)
-	->applyAdditionalConfigurationSettings();
 
 // Timetracking started
 $configuredCookieName = trim($GLOBALS['TYPO3_CONF_VARS']['BE']['cookieName']);
@@ -78,25 +80,6 @@ if ($_COOKIE[$configuredCookieName]) {
 
 $TT->start();
 $TT->push('','Script start');
-
-\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->initializeTypo3DbGlobal();
-
-/** @var $TSFE \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController */
-$TSFE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
-		'TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController',
-		$TYPO3_CONF_VARS,
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('id'),
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('type'),
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('no_cache'),
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('cHash'),
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('jumpurl'),
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('MP'),
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('RDCT')
-);
-
-
-$TSFE->connectToDB();
-$TSFE->sendRedirect();
 
 $TT->pull();
 
