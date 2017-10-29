@@ -1,2 +1,4 @@
 # cat=basic/enable/10; type=text; label= Configure the PIDs containing the fe_users for authentication.
 pids = 4
+# cat=basic/enable/20; type=text; label= The number of days events should be shown from the past.
+archiveDays = 7

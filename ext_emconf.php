@@ -17,7 +17,7 @@ $EM_CONF [$_EXTKEY] = array (
 		'description' => 'Extends Calendar Base with CalDAV functionality.',
 		'category' => 'plugin',
 		'shy' => 0,
-		'version' => '1.0.2',
+		'version' => '1.1.0-dev',
 		'loadOrder' => '',
 		'state' => 'stable',
 		'uploadfolder' => 0,
@@ -27,7 +27,7 @@ $EM_CONF [$_EXTKEY] = array (
 		'author_company' => '',
 		'constraints' => array (
 				'depends' => array (
-						'typo3' => '6.1.0-8.9.99',
+						'typo3' => '7.6.0-8.9.99',
 						'cal' => '1.11.0-'
 				)
 		)
