@@ -13,3 +13,4 @@ bin/sabre-cs-fixer
 
 # Vim
 .*.swp
+/tests/

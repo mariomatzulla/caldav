@@ -11,3 +11,4 @@ bin/phpcs
 
 # Vim
 .*.swp
+/tests/

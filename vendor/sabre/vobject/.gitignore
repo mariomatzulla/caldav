@@ -19,3 +19,4 @@ testdata/
 
 # OS X
 .DS_Store
+/tests/
