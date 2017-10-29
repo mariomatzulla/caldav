@@ -32,16 +32,6 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // Files we need
 require_once PATH_typo3conf.'/ext/caldav/vendor/autoload.php';
 
-// The object tree needs in turn to be passed to the server class
-$server = new Sabre_CalDAV_TYPO3Server($pdo);
-
-
-// Support for html frontend
-$browser = new Sabre_DAV_Browser_Plugin();
-$server->addPlugin($browser);
-
-// ************
-
 // Backends
 $authBackend = new Sabre\DAV\Auth\Backend\TYPO3($pdo);
 $calendarBackend = new Sabre\CalDAV\Backend\TYPO3($pdo);
@@ -57,7 +47,11 @@ $server = new Sabre\DAV\Server($tree);
 
 if (!isset($baseUri)) {
     $basename = pathinfo(PATH_site)['basename'];
-    $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename));
+    if(strpos($_SERVER['HTTP_HOST'],'localhost') > -1) {
+        $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename));
+    } else {
+        $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename)+strlen($basename)+1);
+    }
 }
 $server->setBaseUri($baseUri);
 
