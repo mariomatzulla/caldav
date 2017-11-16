@@ -88,11 +88,11 @@ class SimpleCollection extends Collection {
     function getChild($name) {
 
         if (isset($this->children[$name])) return $this->children[$name];
-        \TYPO3\CMS\Core\Utility\DebugUtility::debug($this->children);
-        \TYPO3\CMS\Core\Utility\DebugUtility::debug($name);
-        \TYPO3\CMS\Core\Utility\DebugUtility::debug(debug_backtrace());
+//        \TYPO3\CMS\Core\Utility\DebugUtility::debug($this->children);
+//        \TYPO3\CMS\Core\Utility\DebugUtility::debug($name);
+//        \TYPO3\CMS\Core\Utility\DebugUtility::debug(debug_backtrace());
         //print_r(debug_backtrace());
-        die();
+//        die();
         throw new Exception\NotFound('File not found: ' . $name . ' in \'' . $this->getName() . '\'');
 
     }

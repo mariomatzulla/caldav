@@ -14,6 +14,14 @@ if ($debug) {
     } else {
         error_reporting(E_ALL ^ E_NOTICE);
     }
+    
+    $actual_link = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $stmt3 = $pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+    $stmt3->execute(array($actual_link));
+    
+    $postdata = file_get_contents("php://input");
+    $stmt3 = $pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+    $stmt3->execute(array($postdata));
 }
 
 include_once 'bootstrap.php';
@@ -31,6 +39,9 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Files we need
 require_once PATH_typo3conf.'/ext/caldav/vendor/autoload.php';
+require_once PATH_typo3conf.'/ext/caldav/Classes/Sabre/CalDAV/Backend/TYPO3.php';
+require_once PATH_typo3conf.'/ext/caldav/Classes/Sabre/DAV/Auth/Backend/TYPO3.php';
+require_once PATH_typo3conf.'/ext/caldav/Classes/Sabre/DAVACL/PrincipalBackend/TYPO3.php';
 
 // Backends
 $authBackend = new Sabre\DAV\Auth\Backend\TYPO3($pdo);
@@ -47,7 +58,7 @@ $server = new Sabre\DAV\Server($tree);
 
 if (!isset($baseUri)) {
     $basename = pathinfo(PATH_site)['basename'];
-    if(strpos($_SERVER['HTTP_HOST'],'localhost') > -1) {
+    if(strpos($_SERVER['HTTP_HOST'],'192.168.2.107:8080') > -1 || strpos($_SERVER['HTTP_HOST'],'localhost') > -1) {
         $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename));
     } else {
         $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename)+strlen($basename)+1);
@@ -67,17 +78,17 @@ $caldavPlugin = new Sabre\CalDAV\Plugin();
 $server->addPlugin($caldavPlugin);
 
 /* Calendar subscription support */
-$server->addPlugin(new Sabre\CalDAV\Subscriptions\Plugin());
+//$server->addPlugin(new Sabre\CalDAV\Subscriptions\Plugin());
 
 /* Calendar scheduling support */
 //$server->addPlugin(new Sabre\CalDAV\Schedule\Plugin());
 
 /* WebDAV-Sync plugin */
-$server->addPlugin(new Sabre\DAV\Sync\Plugin());
+//$server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 /* CalDAV Sharing support */
-$server->addPlugin(new Sabre\DAV\Sharing\Plugin());
-$server->addPlugin(new Sabre\CalDAV\SharingPlugin());
+//$server->addPlugin(new Sabre\DAV\Sharing\Plugin());
+//$server->addPlugin(new Sabre\CalDAV\SharingPlugin());
 
 // Support for html frontend
 $browser = new Sabre\DAV\Browser\Plugin();

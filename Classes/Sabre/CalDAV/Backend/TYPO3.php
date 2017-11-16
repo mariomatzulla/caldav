@@ -28,6 +28,8 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      */
     const MAX_DATE = '2038-01-01';
     
+    const DEBUG_THIS = FALSE;
+    
     /**
      * pdo
      *
@@ -89,10 +91,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      */
     public $propertyMap = array(
         '{DAV:}displayname' => 'title',
-        '{urn:ietf:params:xml:ns:caldav}calendar-description' => 'tx_caldav_data',
-        '{urn:ietf:params:xml:ns:caldav}calendar-timezone' => 'timezone',
-        '{http://apple.com/ns/ical/}calendar-order' => 'calendarorder',
-        '{http://apple.com/ns/ical/}calendar-color' => 'calendarcolor'
+        '{urn:ietf:params:xml:ns:caldav}calendar-description' => 'tx_caldav_data'
+//         '{urn:ietf:params:xml:ns:caldav}calendar-timezone' => 'timezone',
+//         '{http://apple.com/ns/ical/}calendar-order' => 'calendarorder',
+//         '{http://apple.com/ns/ical/}calendar-color' => 'calendarcolor'
     );
 
     /**
@@ -145,14 +147,29 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      */
     function getCalendarsForUser($principalUri) {
         $principalUriParts = explode("/", $principalUri);
+        $usernameVar = array_pop($principalUriParts);
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getCalendarsForUser username:'.$usernameVar));
+        }
+        
         $stmt = $this->pdo->prepare("SELECT uid, username, tx_cal_calendar FROM fe_users WHERE username = ? AND deleted=0");
-        $stmt->execute(array(
-            array_pop($principalUriParts)
-        ));
+        $stmt->execute(array($usernameVar));
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getCalendarsForUser start:'.$principalUri));
+        }
         
         $calendars = [];
         
         while ($user = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            
+            if(DEBUG_THIS){
+                $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+                $stmt3->execute(array('tx_cal_calendar:'.$user['tx_cal_calendar']));
+            }
             
             $stmt2 = $this->pdo->prepare("SELECT * FROM tx_cal_calendar WHERE uid in (?)");
             $stmt2->execute(array($user['tx_cal_calendar']));
@@ -161,11 +178,17 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
                 
                 $components = explode(',', 'VEVENT,VTODO');
                 
+                if(DEBUG_THIS){
+                    $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+                    $stmt3->execute(array('titel:'.$row['title']));
+                }
+                
                 $calendar = [
                     'id' => [(int)$row['uid'], (int)$row['uid']],
                     'uri' => $row['title'],
                     'principaluri' => $principalUri,
                     '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $row['tstamp'] ? $row['tstamp'] : '0',
+                    '{http://sabredav.org/ns}sync-token' => 'http://sabredav.org/ns/sync-token/'.($row['tstamp'] ? $row['tstamp'] : '0'),
                     '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
                     '{DAV:}displayname' => $row['title'],
                     '{urn:ietf:params:xml:ns:caldav}calendar-description' => '',
@@ -176,6 +199,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
                 
                 $calendars[] = $calendar;
             }
+        }
+        if(DEBUG_THIS){
+            $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt->execute(array('getCalendarsForUser end'));
         }
         return $calendars;
     }
@@ -192,27 +219,53 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return string
      */
     function createCalendar($principalUri, $calendarUri, array $properties) {
+        // We handle calendar names like ids. Until we change this we can not hanlde this feature
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('createCalendar start'));
+        }
+        throw new DAV\Exception\NotImplemented('Not implemented: createCalendar');
+        $pid = 0;
+        $userId = 0;
+        $userCalendars=[];
+        // First find another calendar for this user and use it's PID
+        $principalUriParts = explode("/", $principalUri);
+        $stmt = $this->pdo->prepare("SELECT uid, username, tx_cal_calendar FROM fe_users WHERE username = ? AND deleted=0");
+        $stmt->execute(array(
+            array_pop($principalUriParts)
+        ));
+        
+        while ($user = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $userId = $user['uid'];
+            $stmt2 = $this->pdo->prepare("SELECT * FROM tx_cal_calendar WHERE uid in (?)");
+            $stmt2->execute(array($user['tx_cal_calendar']));
+            $userCalendars = array($user['tx_cal_calendar']);
+            while ($row = $stmt2->fetch(\PDO::FETCH_ASSOC)) {
+                $pid = $row['pid'];
+            }
+        }
+        
+        
+        $calendarUriParts = explode("/", $calendarUri);
         $fieldNames = array(
-            'principaluri',
-            'uri',
-            'ctag'
+            'pid',
+            'tstamp'
         );
         $values = array(
-            ':principaluri' => $principalUri,
-            ':uri' => $calendarUri,
-            ':ctag' => 1
+            ':pid' => $pid,
+            ':time' => time()
         );
         
         // Default value
         $sccs = '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set';
-        $fieldNames[] = 'components';
+        //$fieldNames[] = 'components';
         if (! isset($properties[$sccs])) {
-            $values[':components'] = 'VEVENT,VTODO';
+            //$values[':components'] = 'VEVENT,VTODO';
         } else {
-            if (! ($properties[$sccs] instanceof Sabre_CalDAV_Property_SupportedCalendarComponentSet)) {
-                throw new Sabre_DAV_Exception('The ' . $sccs . ' property must be of type: Sabre_CalDAV_Property_SupportedCalendarComponentSet');
+            if (! ($properties[$sccs] instanceof CalDAV\Xml\Property\SupportedCalendarComponentSet)) {
+                throw new DAV\Exception('The ' . $sccs . ' property must be of type: Sabre_CalDAV_Xml_Property_SupportedCalendarComponentSet');
             }
-            $values[':components'] = implode(',', $properties[$sccs]->getValue());
+            //$values[':components'] = implode(',', $properties[$sccs]->getValue());
         }
         
         foreach ($this->propertyMap as $xmlName => $dbName) {
@@ -227,9 +280,19 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         $stmt = $this->pdo->prepare("INSERT INTO tx_cal_calendar (" . implode(', ', $fieldNames) . ") VALUES (" . implode(', ', array_keys($values)) . ")");
         $stmt->execute($values);
         
+        $calendarId = $this->pdo->lastInsertId($this->calendarInstancesTableName);
+        
+        $userCalendars[] = $calendarId;
+        
+        $stmt = $this->pdo->prepare('UPDATE fe_users SET tx_cal_calendar = ? WHERE uid = ?');
+        $stmt->execute(array(
+            implode(',', $userCalendars),
+            $userId
+        ));
+        
         return [
             $calendarId,
-            $this->pdo->lastInsertId($this->calendarInstancesTableName)
+            $calendarId
         ];
     }
 
@@ -250,6 +313,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return void
      */
     function updateCalendar($calendarId, \Sabre\DAV\PropPatch $propPatch) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('updateCalendar start'));
+        }
         if (! is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
@@ -280,7 +347,7 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
             }
             
             if (! empty($newValues)) {
-                $stmt = $this->pdo->prepare("UPDATE tx_cal_calendar SET " . implode(', ', $valuesSql) . " WHERE id = ?");
+                $stmt = $this->pdo->prepare("UPDATE tx_cal_calendar SET " . implode(', ', $valuesSql) . " WHERE uid = ?");
                 $newValues['id'] = $calendarId;
                 $stmt->execute(array_values($newValues));
             }
@@ -306,6 +373,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return void
      */
     function deleteCalendar($calendarId) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('deleteCalendar start'));
+        }
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
@@ -326,6 +397,31 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         $stmt->execute(array(
             $calendarId
         ));
+        
+        $stmt = $this->pdo->prepare("SELECT uid, tx_cal_calendar FROM fe_users WHERE FIND_IN_SET(?,tx_cal_calendar) AND deleted=0");
+        $stmt->execute(array(
+            $calendarId
+        ));
+        
+        while ($user = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $userId = $user['uid'];
+            $userCalendars = array($user['tx_cal_calendar']);
+            if (($key = array_search($calendarId, $userCalendars)) !== false) {
+                unset($userCalendars[$key]);
+            }
+            $stmt2 = $this->pdo->prepare('UPDATE fe_users SET tx_cal_calendar = ? WHERE uid = ?');
+            $stmt2->execute(array(
+                implode(',', $userCalendars),
+                $userId
+            ));
+        }
+        
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('deleteCalendar end'));
+        }
+        
         $this->clearCache($calendarRow['pid']);
     }
 
@@ -367,6 +463,11 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         }
         list($calendarId, $instanceId) = $calendarId;
         
+        if(DEBUG_THIS){
+            $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt->execute(array('getCalendarObjects start'));
+        }
+        
         $now = new \TYPO3\CMS\Cal\Model\CalDate();
         $now->setHour(0);
         $now->setMinute(0);
@@ -402,6 +503,18 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
             $formattedStarttime
         ));
         $eventArray = $stmt->fetchAll();
+        $preparedArray = $this->getEventsFromResult($eventArray);
+        
+        
+        if(DEBUG_THIS){
+            $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt->execute(array('getCalendarObjects end'));
+        }
+        
+        return $preparedArray;
+    }
+    
+    private function getEventsFromResult($eventArray) {
         $preparedArray = Array();
         foreach ($eventArray as $eventRow) {
             if ($eventRow['tx_caldav_uid'] == '' && $eventRow['icsUid'] == '') {
@@ -412,33 +525,44 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
                     $eventRow['tx_caldav_uid'],
                     $eventRow['icsUid'],
                     $eventRow['uid']
-                ));
-            } else 
+                    ));
+            } else {
                 if ($eventRow['tx_caldav_uid'] == '') {
                     $eventRow['tx_caldav_uid'] = $eventRow['icsUid'];
                     $stmt = $this->pdo->prepare("UPDATE tx_cal_event SET tx_caldav_uid = ? WHERE uid = ?");
                     $stmt->execute(Array(
                         $eventRow['tx_caldav_uid'],
                         $eventRow['uid']
-                    ));
-                } else 
+                        ));
+                } else {
                     if ($eventRow['icsUid'] == '') {
                         $eventRow['icsUid'] = $eventRow['tx_caldav_uid'];
                         $stmt = $this->pdo->prepare("UPDATE tx_cal_event SET icsUid = ? WHERE uid = ?");
                         $stmt->execute(Array(
                             $eventRow['icsUid'],
                             $eventRow['uid']
-                        ));
+                            ));
                     }
-                //TODO: fill other infos too: etag,size,component
+                }
+            }
+            //TODO: fill other infos too: component
+            $calendarData = rtrim($eventRow['tx_caldav_data']);
+    
+            if(DEBUG_THIS){
+                $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+                $stmt->execute(array('$calendarData:'.$calendarData));
+            }
+    
             $preparedArray[] = Array(
                 'id' => $eventRow['uid'],
                 'uri' => $eventRow['tx_caldav_uid'],
                 'lastmodified' => $eventRow['tstamp'],
                 'displayname' => $eventRow['title'],
-                'calendardata' => rtrim($eventRow['tx_caldav_data']),
+                'calendardata' => $calendarData,
+                'etag' => md5($calendarData),
+                'size' => strlen($calendarData),
                 'calendarid' => $calendarId
-            );
+                );
         }
         return $preparedArray;
     }
@@ -466,6 +590,11 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         }
         list($calendarId, $instanceId) = $calendarId;
         
+        if(DEBUG_THIS){
+            $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt->execute(array('getCalendarObject start'));
+        }
+        
         $stmt = $this->pdo->prepare('SELECT * FROM tx_cal_event WHERE calendar_id = ? AND tx_caldav_uid = ? AND deleted = 0 AND hidden = 0');
         $stmt->execute(array(
             $calendarId,
@@ -476,13 +605,27 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         if (!$eventRow) {
             return null;
         }
-        //TODO: return etag,size,component
+        //TODO: return component
+        $calendarData = rtrim($eventRow['tx_caldav_data']);
+        
+        if(DEBUG_THIS){
+            $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt->execute(array('$calendarData:'.$calendarData));
+        }
+        
+        if(DEBUG_THIS){
+            $stmt = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt->execute(array('getCalendarObject end'));
+        }
+        
         return [
             'id' => $eventRow['uid'],
             'uri' => $eventRow['tx_caldav_uid'],
             'lastmodified' => $eventRow['tstamp'],
             'displayname' => $eventRow['title'],
-            'calendardata' => rtrim($eventRow['tx_caldav_data']),
+            'calendardata' => $calendarData,
+            'etag' => md5($calendarData),
+            'size' => strlen($calendarData),
             'calendarid' => $calendarId,
         ];
     }
@@ -500,6 +643,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return array
      */
     function getMultipleCalendarObjects($calendarId, array $uris) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getMiltipleCalendarObjects start'));
+        }
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
@@ -530,7 +677,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return string|null
      */
     function createCalendarObject($calendarId, $objectUri, $calendarData) {
-        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('createCalendarObject start'));
+        }
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
@@ -569,6 +719,11 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         
         $this->addChange($calendarId, $objectUri, 1);
         
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('createCalendarObject end'));
+        }
+        
         return '"' . $extraData['etag'] . '"';
     }
 
@@ -591,7 +746,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return string|null
      */
     function updateCalendarObject($calendarId, $objectUri, $calendarData) {
-        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('updateCalednarObject start'));
+        }
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
@@ -635,7 +793,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return void
      */
     function deleteCalendarObject($calendarId, $objectUri) {
-        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('deleteCalendarObject start'));
+        }
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
@@ -661,6 +822,11 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
         $service = new \TYPO3\CMS\Cal\Service\ICalendarService();
         $service->clearAllImagesAndAttachments($eventRow['uid']);
         $this->clearCache($eventRow['pid']);
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('deleteCalendarObject end'));
+        }
         
         $this->addChange($calendarId, $objectUri, 3);
     }
@@ -718,11 +884,20 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return array
      */
     function calendarQuery($calendarId, array $filters) {
-        throw new DAV\Exception\NotImplemented('Not implemented: calendarQuery');
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('calendarQuery start'));
+        }
+        //throw new DAV\Exception\NotImplemented('Not implemented: calendarQuery');
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
         }
         list($calendarId, $instanceId) = $calendarId;
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('$calendarId:'.$calendarId));
+        }
     
         $componentType = null;
         $requirePostFilter = true;
@@ -753,33 +928,85 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
             }
     
         }
-    
-        if ($requirePostFilter) {
-            $query = "SELECT uri, calendardata FROM " . $this->calendarObjectTableName . " WHERE calendarid = :calendarid";
-        } else {
-            $query = "SELECT uri FROM " . $this->calendarObjectTableName . " WHERE calendarid = :calendarid";
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('a'));
         }
     
         $values = [
             'calendarid' => $calendarId,
         ];
     
+        //TODO we only support VEVENT. Make VTODO available too
         if ($componentType) {
             $query .= " AND componenttype = :componenttype";
             $values['componenttype'] = $componentType;
         }
     
+        $formattedStarttime = '';
+        $formattedEndtime = '';
+        
+        $now = new \TYPO3\CMS\Cal\Model\CalDate();
+        $now->setHour(0);
+        $now->setMinute(0);
+        $now->setSecond(0);
+        
+        $then = new \TYPO3\CMS\Cal\Model\CalDate();
+        $then->setHour(0);
+        $then->setMinute(0);
+        $then->setSecond(0);
+        
+        $then->setYear($now->getYear() + 50); // all events for the next 50 years
+        $confArr = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['caldav']);
+        $archiveDays = intval($confArr['archiveDays']);
+        if ($archiveDays < 1) {
+            $archiveDays = 7;
+        }
+        $now->addSeconds(- 86400 * $archiveDays); // include the last x days
+        
+        $formattedStarttime = $now->format('%Y%m%d');
+        $formattedEndtime = $then->format('%Y%m%d');
+        
         if ($timeRange && $timeRange['start']) {
             $query .= " AND lastoccurence > :startdate";
             $values['startdate'] = $timeRange['start']->getTimeStamp();
+            
         }
+        
+        
+        
+        
         if ($timeRange && $timeRange['end']) {
             $query .= " AND firstoccurence < :enddate";
             $values['enddate'] = $timeRange['end']->getTimeStamp();
+            
+            //$formattedStarttime = $now->format('%Y%m%d');
+            //$formattedEndtime = $then->format('%Y%m%d');
+            
         }
-    
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($values);
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('$$calendarId:'.$calendarId));
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('$formattedStarttime:'.$formattedStarttime));
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('$formattedEndtime:'.$formattedEndtime));
+        }
+        
+        $stmt = $this->pdo->prepare('SELECT * FROM tx_cal_event WHERE calendar_id = ? AND deleted = 0 AND hidden = 0 AND ((tx_cal_event.start_date>=? AND tx_cal_event.start_date<=?) OR (tx_cal_event.end_date<=? AND tx_cal_event.end_date>=?) OR (tx_cal_event.end_date>=? AND tx_cal_event.start_date<=?) or (start_date<=? AND (freq IN ("day", "week", "month", "year") AND (until>=? OR until=0))) OR (tx_cal_event.rdate AND tx_cal_event.rdate_type IN ("date_time", "date", "period")))');
+        $stmt->execute(array(
+            $calendarId,
+            $formattedStarttime,
+            $formattedEndtime,
+            $formattedEndtime,
+            $formattedStarttime,
+            $formattedEndtime,
+            $formattedStarttime,
+            $formattedEndtime,
+            $formattedStarttime
+        ));
     
         $result = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -788,9 +1015,43 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
                     continue;
                 }
             }
-            $result[] = $row['uri'];
+            $result[] = $row['tx_caldav_uid'];
     
         }
+        
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('calendarQuery end'));
+        }
+    
+        return $result;
+    
+    }
+    
+    /**
+     * This method validates if a filter (as passed to calendarQuery) matches
+     * the given object.
+     *
+     * @param array $object
+     * @param array $filters
+     * @return bool
+     */
+    protected function validateFilterForObject(array $object, array $filters) {
+    
+        // Unfortunately, setting the 'calendardata' here is optional. If
+        // it was excluded, we actually need another call to get this as
+        // well.
+        if (!isset($object['tx_caldav_data'])) {
+            $object = $this->getCalendarObject($object['calendar_id'], $object['tx_caldav_uid']);
+        }
+    
+        $vObject = VObject\Reader::read($object['tx_caldav_data']);
+    
+        $validator = new CalDAV\CalendarQueryValidator();
+        $result = $validator->validate($vObject, $filters);
+    
+        // Destroy circular references so PHP will GC the object.
+        $vObject->destroy();
     
         return $result;
     
@@ -816,6 +1077,10 @@ class TYPO3 extends AbstractBackend implements SyncSupport {
      * @return string|null
      */
     function getCalendarObjectByUID($principalUri, $uid) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getCalendarObjectByUID start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented');
         $query = <<<SQL
 SELECT
@@ -897,6 +1162,10 @@ SQL;
      * @return array
      */
     function getChangesForCalendar($calendarId, $syncToken, $syncLevel, $limit = null) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getChangesForCalendar start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: getChangesForCalendar');
         if (!is_array($calendarId)) {
             throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
@@ -1106,6 +1375,10 @@ SQL;
      * @return array
      */
     function getSubscriptionsForUser($principalUri) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getSubscriptionForUser start'));
+        }
         return [];
         //TODO implement me
         $fields = array_values($this->subscriptionPropertyMap);
@@ -1159,6 +1432,10 @@ SQL;
      * @return mixed
      */
     function createSubscription($principalUri, $uri, array $properties) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('createSubscription start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: createSubscription');
         $fieldNames = [
             'principaluri',
@@ -1255,6 +1532,10 @@ SQL;
      * @return void
      */
     function deleteSubscription($subscriptionId) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('deleteSubscription start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: deleteSubscription');
         $stmt = $this->pdo->prepare('DELETE FROM ' . $this->calendarSubscriptionsTableName . ' WHERE id = ?');
         $stmt->execute([$subscriptionId]);
@@ -1278,6 +1559,10 @@ SQL;
      * @return array
      */
     function getSchedulingObject($principalUri, $objectUri) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getSchedulingObject start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: getSchedulingObject');
         $stmt = $this->pdo->prepare('SELECT uri, calendardata, lastmodified, etag, size FROM ' . $this->schedulingObjectTableName . ' WHERE principaluri = ? AND uri = ?');
         $stmt->execute([$principalUri, $objectUri]);
@@ -1307,6 +1592,10 @@ SQL;
      * @return array
      */
     function getSchedulingObjects($principalUri) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getSchedulingObjects start'));
+        }
         return [];
         //TODO: implement me
         $stmt = $this->pdo->prepare('SELECT id, calendardata, uri, lastmodified, etag, size FROM ' . $this->schedulingObjectTableName . ' WHERE principaluri = ?');
@@ -1335,6 +1624,10 @@ SQL;
      * @return void
      */
     function deleteSchedulingObject($principalUri, $objectUri) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('deleteSchedulingObject start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: deleteSchedulingObject');
         $stmt = $this->pdo->prepare('DELETE FROM ' . $this->schedulingObjectTableName . ' WHERE principaluri = ? AND uri = ?');
         $stmt->execute([$principalUri, $objectUri]);
@@ -1350,6 +1643,10 @@ SQL;
      * @return void
      */
     function createSchedulingObject($principalUri, $objectUri, $objectData) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('createSchedulingObject start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: createSchedulingObject');
         $stmt = $this->pdo->prepare('INSERT INTO ' . $this->schedulingObjectTableName . ' (principaluri, calendardata, uri, lastmodified, etag, size) VALUES (?, ?, ?, ?, ?, ?)');
         $stmt->execute([$principalUri, $objectData, $objectUri, time(), md5($objectData), strlen($objectData)]);
@@ -1477,6 +1774,10 @@ INSERT INTO ' . $this->calendarInstancesTableName . '
      * @return \Sabre\DAV\Xml\Element\Sharee[]
      */
     function getInvites($calendarId) {
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('getInvites start'));
+        }
         return [];
         //TODO: implement this
 
@@ -1528,7 +1829,10 @@ SQL;
      * @return void
      */
     function setPublishStatus($calendarId, $value) {
-    
+        if(DEBUG_THIS){
+            $stmt3 = $this->pdo->prepare('INSERT INTO temp (text) VALUES (?)');
+            $stmt3->execute(array('setPulishStatus start'));
+        }
         throw new DAV\Exception\NotImplemented('Not implemented: setPublishStatus');
     
     }
