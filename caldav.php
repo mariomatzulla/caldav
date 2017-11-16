@@ -58,7 +58,7 @@ $server = new Sabre\DAV\Server($tree);
 
 if (!isset($baseUri)) {
     $basename = pathinfo(PATH_site)['basename'];
-    if(strpos($_SERVER['HTTP_HOST'],'192.168.2.107:8080') > -1 || strpos($_SERVER['HTTP_HOST'],'localhost') > -1) {
+    if(strpos($_SERVER['HTTP_HOST'],'localhost') > -1) {
         $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename));
     } else {
         $baseUri = '/'.substr(PATH_thisScript, strpos(PATH_thisScript, $basename)+strlen($basename)+1);
