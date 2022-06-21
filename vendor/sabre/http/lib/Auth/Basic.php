@@ -25,15 +25,15 @@ class Basic extends AbstractAuth {
      *
      * @return null|array
      */
-    function getCredentials() {
-
+    public function getCredentials()
+    {
         $auth = $this->request->getHeader('Authorization');
 
         if (!$auth) {
             return null;
         }
 
-        if (strtolower(substr($auth, 0, 6)) !== 'basic ') {
+        if ('basic ' !== strtolower(substr($auth, 0, 6))) {
             return null;
         }
 
@@ -44,7 +44,6 @@ class Basic extends AbstractAuth {
         }
 
         return $credentials;
-
     }
 
     /**
@@ -55,7 +54,7 @@ class Basic extends AbstractAuth {
      */
     function requireLogin() {
 
-        $this->response->addHeader('WWW-Authenticate', 'Basic realm="' . $this->realm . '"');
+        $this->response->addHeader('WWW-Authenticate', 'Basic realm="'.$this->realm.'", charset="UTF-8"');
         $this->response->setStatus(401);
 
     }

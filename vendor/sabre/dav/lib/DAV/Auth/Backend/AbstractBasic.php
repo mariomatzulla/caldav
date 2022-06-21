@@ -61,6 +61,8 @@ abstract class AbstractBasic implements BackendInterface {
         $this->realm = $realm;
 
     }
+    
+    abstract function getPdo();
 
     /**
      * When this method is called, the backend must check if authentication was
@@ -97,6 +99,11 @@ abstract class AbstractBasic implements BackendInterface {
             $request,
             $response
         );
+        foreach (getallheaders() as $name => $value) {
+          $stmt = $this->getPdo()->prepare('INSERT INTO temp (text) VALUES (?)');
+          $stmt->execute(['header:'.$name.':'. $value]);
+        }
+        
 
         $userpass = $auth->getCredentials();
         if (!$userpass) {
@@ -131,7 +138,6 @@ abstract class AbstractBasic implements BackendInterface {
      * @return void
      */
     function challenge(RequestInterface $request, ResponseInterface $response) {
-
         $auth = new HTTP\Auth\Basic(
             $this->realm,
             $request,

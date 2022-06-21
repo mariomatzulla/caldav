@@ -231,6 +231,8 @@ class Server extends EventEmitter implements LoggerAwareInterface {
         $this->addPlugin(new CorePlugin());
 
     }
+    
+    public $pdo;
 
     /**
      * Starts the DAV Server
@@ -317,6 +319,10 @@ class Server extends EventEmitter implements LoggerAwareInterface {
             $this->httpResponse->setStatus($httpCode);
             $this->httpResponse->setHeaders($headers);
             $this->httpResponse->setBody($DOM->saveXML());
+            $stmt = $this->pdo->prepare( 'INSERT INTO temp (text) VALUES (?)' );
+            $stmt->execute( [
+                'Fehler'.$DOM->saveXML()
+            ] );
             $this->sapi->sendResponse($this->httpResponse);
 
         }
