@@ -97,7 +97,6 @@ class IcsGenerator {
     if ($eventPage > 0) {
       $where = 'tx_cal_event.pid = ' . $eventPage . ' AND ' . $where;
     }
-    $info .= 'vor';
     $results = $GLOBALS ['TYPO3_DB']->exec_SELECTquery( $select, $table, $where );
     if ($results) {
       $eventArray = Array ();
@@ -118,7 +117,7 @@ class IcsGenerator {
             $eventObject = $calAPI->modelObj->findEvent( $event ['uid'], 'tx_cal_phpicalendar', $event ['pid'], false, false, false, true, true );
             if (is_object( $eventObject )) {
               $this->info .= '<li>' . $event ['title'] . '</li>';
-              if ($eventObject->conf ['view.'] ['event.'] ['phpicalendarEventTemplate']) {
+              if (isset($eventObject->conf ['view.'] ['event.'] ['phpicalendarEventTemplate'])) {
                 $oldPath = &$eventObject->conf ['view.'] ['event.'] ['phpicalendarEventTemplate'];
               } else {
                 $oldPath = &$eventObject->conf ['view.'] ['event.'] ['eventModelTemplate'];

@@ -28,7 +28,7 @@ $EM_CONF [$_EXTKEY] = array (
 		'constraints' => array (
 				'depends' => array (
 						'typo3' => '11.5.1-',
-						'cal' => '1.12.0-'
+						'cal' => '1.12.0'
 				)
 		)
 );

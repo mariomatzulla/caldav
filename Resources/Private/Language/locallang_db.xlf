@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+	<file source-language="en" datatype="plaintext" original="messages" date="2022-06-29T06:07:13Z" product-name="caldav">
+		<header/>
+		<body>
+			<trans-unit id="caldav_data" resname="caldav_data" >
+				<source>CalDAV data</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

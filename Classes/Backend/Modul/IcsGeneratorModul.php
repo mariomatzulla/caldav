@@ -99,6 +99,10 @@ class IcsGeneratorModul {
   protected $request;
 
   var $pageinfo;
+  
+  private $id;
+  
+  private $perms_clause;
 
   /**
    *
@@ -107,7 +111,7 @@ class IcsGeneratorModul {
   public function __construct() {
 
     $this->moduleTemplate = GeneralUtility::makeInstance( ModuleTemplate::class );
-    $this->getLanguageService()->includeLLFile( 'EXT:caldav/Resources/Private/Language/locallang_ics_generator.xml' );
+    $this->getLanguageService()->includeLLFile( 'EXT:caldav/Resources/Private/Language/locallang_ics_generator.xlf' );
     $this->MCONF = [ 
         'name' => $this->moduleName
     ];
@@ -144,7 +148,6 @@ class IcsGeneratorModul {
    * Used for the function menu selector.
    */
   public function menuConfig() {
-
     $this->MOD_MENU = Array (
         'function' => Array (
             '1' => $this->getLanguageService()->getLL( 'function1' ),
@@ -190,6 +193,7 @@ class IcsGeneratorModul {
 
     $menu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
     $menu->setIdentifier( 'CaldavJumpMenu' );
+    $selection = $this->getSelection();
     
     foreach ( $this->MOD_MENU ['function'] as $controller => $title ) {
       
@@ -200,7 +204,7 @@ class IcsGeneratorModul {
           ]
       ] ) )->setTitle( $title );
       
-      if (intval( $controller ) == intval( $this->MOD_SETTINGS ['function'] )) {
+      if (intval( $controller ) == $selection) {
         $item->setActive( true );
       }
       $menu->addMenuItem( $item );
@@ -226,7 +230,7 @@ class IcsGeneratorModul {
       $this->content = '<form name="tx_cal_form" id="tx_cal_form" method="post" action="">';
       
       // Prepare main content
-      $this->content .= '<h1>' . $this->getLanguageService()->getLL( 'function.' . $this->MOD_SETTINGS ['function'] ) . '</h1>';
+      $this->content .= '<h1>' . $this->getLanguageService()->getLL( 'function.' . $this->getSelection() ) . '</h1>';
       $this->content .= $this->getModuleContent();
       $this->content .= '</form>';
     } else {
@@ -244,7 +248,7 @@ class IcsGeneratorModul {
   protected function getModuleContent() {
 
     $content = '';
-    switch (intval( $this->request->getQueryParams() ['SET'] ['function'] )) {
+    switch ($this->getSelection()) {
       case 2 :
         $postVarArray = GeneralUtility::_POST();
         $pageIds = Array ();
@@ -273,9 +277,8 @@ class IcsGeneratorModul {
           
           $label = '<label>' . $this->getLanguageService()->getLL( 'tableHeader2' ) . '</label>';
           
-          $table [] = '<div class="form-group col-sm-12" id="pageId_colId' . $pid . '">' . $label . '<div class="form-control-wrap">' . '<div class="input-group" id="pageId_colId' . $pid . '_row-wrapper">' . '<input name="pageId" value="' . $value . '" class="form-control  t3js-clearable" data-date-type="date" data-date-offset="0" type="text" id="tceforms-pageId_colId' . $pid . '_row">' . '</div>' . '</div>' . '</div>';
+          $table [] = '<div class="form-group col-sm-12" id="pageId_colId' . $pid . '">' . $label . '<div class="form-control-wrap">' . '<div class="input-group" id="pageId_colId' . $pid . '_row-wrapper">' . '<input name="pageId" value="' . $pid . '" class="form-control  t3js-clearable" data-date-type="date" data-date-offset="0" type="text" id="tceforms-pageId_colId' . $pid . '_row">' . '</div>' . '</div>' . '</div>';
           $content .= implode( LF, $table );
-          $scontent .= '<br /><br /><input type="submit" value="' . $this->getLanguageService()->getLL( 'submit' ) . '" onclick="return markSelections();"/>';
           
           $selectFields = '';
           foreach ( $selectFieldIds as $selectFieldId ) {
@@ -283,7 +286,8 @@ class IcsGeneratorModul {
           }
           $content .= '<script type="text/javascript">function markSelections(){ var notComplete = 0;' . $selectFields . ' if(notComplete == 1){alert("' . $this->getLanguageService()->getLL( 'notAllPagesAssigned' ) . '");return false;}return true;}</script>';
           
-          $content .= $this->getLanguageService()->getLL( 'startIndexing' ) . $scontent;
+          $content .= $this->getLanguageService()->getLL( 'startIndexing' );
+          $content .= '<br /><br /><input type="submit" value="' . $this->getLanguageService()->getLL( 'submit' ) . '" onclick="return markSelections();"/>';;
         }
         break;
       case 3 :
@@ -308,6 +312,14 @@ class IcsGeneratorModul {
   protected function getLanguageService(): \TYPO3\CMS\Core\Localization\LanguageService {
 
     return $GLOBALS ['LANG'];
+  }
+  
+  private function getSelection() {
+    $selection = 1;
+    if(isset($this->request->getQueryParams() ['SET']) && intval( $this->request->getQueryParams() ['SET'] ['function'] ) > 1) {
+      $selection = intval( $this->request->getQueryParams() ['SET'] ['function'] );
+    }
+    return $selection;
   }
 }
 ?>

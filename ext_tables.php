@@ -24,7 +24,7 @@ if (TYPO3_MODE == "BE") {
 						'access' => 'admin',
 						'name' => 'tools_txcaldavM1',
 						'icon' => 'EXT:' . $_EXTKEY . '/Classes/Backend/Modul/icon_tx_caldav_ics_generator.svg',
-						'labels' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/locallang_ics_generator_mod.xml'
+						'labels' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/locallang_ics_generator.xml'
 				]
 				);
 	}
